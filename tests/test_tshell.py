@@ -57,6 +57,35 @@ class TessentShellTests(unittest.TestCase):
         self.assertIn("C1-1", proc.stdout)
         self.assertIn("D1-1", proc.stdout)
 
+    def test_atpg_pattern_generation_and_reporting(self):
+        cmd = (
+            "read_verilog output/serial_adder_scan.v; "
+            "add_clocks 0 clk; "
+            "set_system_mode analysis; "
+            "add_faults -all; "
+            "create_patterns; "
+            "report_patterns; "
+            "simulate_patterns; "
+            "report_statistics"
+        )
+        proc = run_tshell("-c", cmd)
+        self.assertEqual(proc.returncode, 0, proc.stderr)
+        self.assertIn("ATPG pattern generation completed: 6 test patterns created", proc.stdout)
+        self.assertIn("Pattern #0", proc.stdout)
+        self.assertIn("test coverage:", proc.stdout.lower())
+
+    def test_positional_clock_and_hierarchical_gate_reporting(self):
+        cmd = (
+            "read_verilog output/serial_adder_scan.v; "
+            "add_clocks 0 clk; "
+            "report_clocks; "
+            "report_gate /serial_adder_scan/dff_q0"
+        )
+        proc = run_tshell("-c", cmd)
+        self.assertEqual(proc.returncode, 0, proc.stderr)
+        self.assertIn("clk             0", proc.stdout)
+        self.assertIn("Gate: dff_q0 (DFF)", proc.stdout)
+
 
 if __name__ == "__main__":
     unittest.main()

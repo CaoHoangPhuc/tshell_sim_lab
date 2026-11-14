@@ -112,6 +112,9 @@ class SessionFSM:
         count = self.atpg_engine.populate_stuck_at_faults(self.circuit)
         return f"//  Added {count} stuck-at faults on {len(self.circuit.nets)} nets/nodes."
 
+    def create_patterns(self) -> list[dict[str, Any]]:
+        return self.atpg_engine.create_patterns(self.circuit)
+
     def simulate_patterns(self) -> ATPGStatistics:
         self.last_statistics = self.atpg_engine.simulate_test_patterns(self.circuit)
         return self.last_statistics

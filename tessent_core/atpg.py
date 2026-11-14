@@ -103,6 +103,7 @@ class ATPGEngine:
 
     def __init__(self) -> None:
         self.faults: dict[str, FaultRecord] = {}
+        self.patterns: list[dict[str, Any]] = []
 
     def populate_stuck_at_faults(self, circuit: CircuitGraph) -> int:
         """Create stuck-at-0 and stuck-at-1 faults for all nets/nodes in circuit."""
@@ -113,18 +114,60 @@ class ATPGEngine:
             self.faults[f"{node}/SA1"] = FaultRecord(node=node, fault_type="SA1")
         return len(self.faults)
 
+    def create_patterns(self, circuit: CircuitGraph) -> list[dict[str, Any]]:
+        """Synthesize deterministic ATPG test patterns for the given circuit."""
+        scan_len = len(circuit.scan_cells)
+        pi_names = [pi for pi in sorted(circuit.primary_inputs) if pi not in ("clk", "scan_en", "scan_in", "reset")]
+
+        patterns: list[dict[str, Any]] = []
+
+        if scan_len > 0:
+            # 1. Base patterns: All 0s and All 1s
+            pat_all0 = {"shift_in": [0] * scan_len}
+            pat_all1 = {"shift_in": [1] * scan_len}
+            for pi in pi_names:
+                pat_all0[pi] = 0
+                pat_all1[pi] = 1
+            patterns.append(pat_all0)
+            patterns.append(pat_all1)
+
+            # 2. Walking 1s across scan cells
+            for i in range(scan_len):
+                bits = [0] * scan_len
+                bits[i] = 1
+                p = {"shift_in": bits}
+                for j, pi in enumerate(pi_names):
+                    p[pi] = (i + j) % 2
+                patterns.append(p)
+
+            # 3. Walking 0s across scan cells
+            for i in range(scan_len):
+                bits = [1] * scan_len
+                bits[i] = 0
+                p = {"shift_in": bits}
+                for j, pi in enumerate(pi_names):
+                    p[pi] = (i + j + 1) % 2
+                patterns.append(p)
+        else:
+            # Combinational patterns
+            p0 = {pi: 0 for pi in pi_names}
+            p1 = {pi: 1 for pi in pi_names}
+            patterns.extend([p0, p1])
+            for i, pi in enumerate(pi_names):
+                p_walk1 = {p: (1 if p == pi else 0) for p in pi_names}
+                p_walk0 = {p: (0 if p == pi else 1) for p in pi_names}
+                patterns.extend([p_walk1, p_walk0])
+
+        self.patterns = patterns
+        return patterns
+
     def simulate_test_patterns(
         self,
         circuit: CircuitGraph,
         test_patterns: list[dict[str, Any]] | None = None,
     ) -> ATPGStatistics:
         """Run true differential fault simulation over test patterns and compute formal coverage."""
-        patterns = test_patterns or [
-            {"shift_in": [0, 1], "a": 0, "b": 1},
-            {"shift_in": [1, 0], "a": 1, "b": 0},
-            {"shift_in": [1, 1], "a": 1, "b": 1},
-            {"shift_in": [0, 0], "a": 0, "b": 0},
-        ]
+        patterns = test_patterns or self.patterns or self.create_patterns(circuit)
 
         # Reset all faults to ND
         for f in self.faults.values():

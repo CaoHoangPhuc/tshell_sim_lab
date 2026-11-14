@@ -121,10 +121,17 @@ class TessentShell(cmd.Cmd):
             print(f"//  Scan Chain '{chain['name']}': {chain['scan_in']} -> {cells_str} -> {chain['scan_out']}")
 
     def do_add_clocks(self, arg: str) -> None:
-        """add_clocks <pin> [-off_state <0|1>] : Define clock port and its off state"""
+        """add_clocks [<off_state>] <pin> [-off_state <0|1>] : Define clock port and its off state"""
         parts = shlex.split(arg)
         if not parts:
-            print("//  Error: Usage: add_clocks <pin> [-off_state <0|1>]")
+            print("//  Error: Usage: add_clocks [<off_state>] <pin> [-off_state <0|1>]")
+            return
+        # Support positional syntax: add_clocks <off_state> <pin> (Siemens Manual p. 131)
+        if parts[0] in ("0", "1") and len(parts) >= 2:
+            off_state = int(parts[0])
+            for pin in parts[1:]:
+                if not pin.startswith("-"):
+                    print(self.fsm.add_clock(pin, off_state=off_state))
             return
         pin = parts[0]
         off_state = 0
@@ -235,6 +242,9 @@ class TessentShell(cmd.Cmd):
             print("//  Usage: report_gate <id_or_name>")
             return
         g = self.fsm.circuit.gates.get(gate_name)
+        if not g:
+            base = gate_name.lstrip("/").split("/")[-1]
+            g = self.fsm.circuit.gates.get(base)
         if g:
             print(f"//  Gate: {g.name} ({g.gate_type})")
             for p, n in g.inputs.items():
@@ -301,8 +311,22 @@ class TessentShell(cmd.Cmd):
 
     def do_create_patterns(self, arg: str) -> None:
         """create_patterns : Generate deterministic ATPG patterns"""
+        patterns = self.fsm.create_patterns()
         print("//  Generating test patterns for scan chains...")
-        print("//  ATPG pattern generation completed: 4 test patterns created.")
+        print(f"//  ATPG pattern generation completed: {len(patterns)} test patterns created.")
+
+    def do_report_patterns(self, arg: str) -> None:
+        """report_patterns : Display generated ATPG patterns"""
+        patterns = self.fsm.atpg_engine.patterns
+        if not patterns:
+            print("//  No patterns generated yet. Run 'create_patterns' first.")
+            return
+        print("//  Pattern_Index   Scan_Data       Primary_Inputs")
+        print("//  ----------------------------------------------")
+        for i, pat in enumerate(patterns):
+            scan_str = "".join(str(b) for b in pat.get("shift_in", [])) or "None"
+            pi_str = ", ".join(f"{k}={v}" for k, v in pat.items() if k != "shift_in")
+            print(f"//  Pattern #{i:<6} {scan_str:<15} {pi_str}")
 
     def do_simulate_patterns(self, arg: str) -> None:
         """simulate_patterns : Simulate patterns and evaluate IEEE fault coverage"""
@@ -444,6 +468,7 @@ def run_demo() -> int:
         "report_drc_rules t3-1",
         "report_drc_rules c1-1",
         "add_faults -all",
+        "create_patterns",
         "simulate_patterns",
         "report_statistics",
     ]
