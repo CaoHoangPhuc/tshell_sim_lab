@@ -5,6 +5,7 @@ These tests treat the original PDF manuals as the Golden Oracle / Reference Benc
 
 from __future__ import annotations
 
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -217,6 +218,115 @@ class ReferenceBookTestUnits(unittest.TestCase):
 
         v_t5 = engine.run_all_checks(c_t5, clocks={}, scan_chains=[{"name": "chain1", "scan_in": "scan_in", "scan_out": "scan_out", "cells": ["dff1"]}])
         self.assertTrue(any(v.rule_id == "T5-1" and v.offending_gate == "dff1" for v in v_t5))
+
+    def test_capture_mode_and_scan_mux_simulation(self):
+        """Verify DFF with scan mux correctly latches functional capture data when scan_en=0."""
+        v_text = """
+        module test_capture(clk, reset, a, scan_en, scan_in, q, scan_out);
+          input clk, reset, a, scan_en, scan_in;
+          output q, scan_out;
+          reg q;
+          always @(posedge clk) begin
+            if (reset) begin
+              q <= 1'b0;
+            end else if (scan_en) begin
+              q <= scan_in;
+            end else begin
+              q <= a;
+            end
+          end
+          assign scan_out = q;
+        endmodule
+        """
+        c = parse_verilog_netlist(v_text)
+        # Capture mode: scan_en=0, a=1
+        c.set_primary_input("reset", 0)
+        c.set_primary_input("scan_en", 0)
+        c.set_primary_input("a", 1)
+        c.clock_edge("clk")
+        self.assertEqual(c.nets.get("q"), Logic4.ONE)
+
+        # Shift mode: scan_en=1, scan_in=0
+        c.set_primary_input("scan_en", 1)
+        c.set_primary_input("scan_in", 0)
+        c.clock_edge("clk")
+        self.assertEqual(c.nets.get("q"), Logic4.ZERO)
+
+    def test_clock_stuck_at_one_prevents_dff_latch(self):
+        """Verify that a clock stuck-at-1 fault prevents DFF from updating state."""
+        v_text = """
+        module test_clk_fault(clk, reset, a, q);
+          input clk, reset, a;
+          output q;
+          reg q;
+          always @(posedge clk) begin
+            if (reset) begin
+              q <= 1'b0;
+            end else begin
+              q <= a;
+            end
+          end
+        endmodule
+        """
+        c = parse_verilog_netlist(v_text)
+        c.set_primary_input("reset", 0)
+        c.set_primary_input("a", 0)
+        c.clock_edge("clk")
+        self.assertEqual(c.nets.get("q"), Logic4.ZERO)
+
+        # Now input a=1, but clock is stuck-at-1
+        c.set_primary_input("a", 1)
+        c.inject_fault("clk", Logic4.ONE)
+        c.clock_edge("clk")
+        # Since clock has no dynamic edge, q must remain 0
+        self.assertEqual(c.nets.get("q"), Logic4.ZERO)
+
+    def test_load_verilog_resets_session_state(self):
+        """Verify that loading a new design clears scan chains, faults, and previous state."""
+        fsm = SessionFSM()
+        # Circuit 1: has scan
+        v1 = """
+        module circ1(clk, reset, scan_in, scan_en, scan_out, q);
+          input clk, reset, scan_in, scan_en;
+          output scan_out, q;
+          reg q;
+          always @(posedge clk) begin
+            if (reset) q <= 1'b0;
+            else if (scan_en) q <= scan_in;
+            else q <= 1'b1;
+          end
+          assign scan_out = q;
+        endmodule
+        """
+        # Circuit 2: pure combinational, no scan
+        v2 = """
+        module circ2(in1, in2, out);
+          input in1, in2;
+          output out;
+          assign out = in1 & in2;
+        endmodule
+        """
+        with tempfile.NamedTemporaryFile("w", suffix=".v", delete=False) as f1:
+            f1.write(v1)
+            p1 = Path(f1.name)
+        with tempfile.NamedTemporaryFile("w", suffix=".v", delete=False) as f2:
+            f2.write(v2)
+            p2 = Path(f2.name)
+
+        try:
+            fsm.load_verilog(p1)
+            fsm.add_faults("-all")
+            self.assertGreater(len(fsm.scan_chains), 0)
+            self.assertGreater(len(fsm.atpg_engine.faults), 0)
+
+            # Load Circuit 2
+            fsm.load_verilog(p2)
+            # Scan chains and previous faults must be completely reset!
+            self.assertEqual(len(fsm.scan_chains), 0)
+            self.assertEqual(len(fsm.atpg_engine.faults), 0)
+        finally:
+            p1.unlink(missing_ok=True)
+            p2.unlink(missing_ok=True)
 
 
 if __name__ == "__main__":

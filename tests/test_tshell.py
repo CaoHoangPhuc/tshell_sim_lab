@@ -87,6 +87,45 @@ class TessentShellTests(unittest.TestCase):
         self.assertIn("clk             0", proc.stdout)
         self.assertIn("Gate: dff_q0 (DFF)", proc.stdout)
 
+    def test_write_tsdb_rejects_unsupported_export_without_overwriting(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            tsdb_dir = Path(tmp) / "tsdb_test"
+            existing = tsdb_dir / "dft_inserted_designs" / "serial_adder_scan.v"
+            existing.parent.mkdir(parents=True)
+            existing.write_text("existing design", encoding="utf-8")
+            for option in ("", " -replace"):
+                cmd = (
+                    "read_verilog examples/serial_adder_scan.v; "
+                    f"set_tsdb_output_directory {tsdb_dir}; "
+                    f"write_tsdb_data{option}"
+                )
+                proc = run_tshell("-c", cmd)
+                self.assertNotEqual(proc.returncode, 0)
+                self.assertIn("not implemented", proc.stdout)
+                self.assertEqual(existing.read_text(encoding="utf-8"), "existing design")
+                self.assertFalse((tsdb_dir / "patterns").exists())
+
+    def test_report_drc_rules_shows_current_design_violation(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            circuit_file = Path(tmp) / "floating_clk.v"
+            circuit_file.write_text(
+                "module floating_clk(float_clk, a, q);\n"
+                "  input float_clk, a;\n"
+                "  output q;\n"
+                "  assign q = a;\n"
+                "endmodule\n"
+            )
+            cmd = (
+                f"read_verilog {circuit_file}; "
+                "add_clocks 0 float_clk; "
+                "set_system_mode analysis; "
+                "report_drc_rules c2"
+            )
+            proc = run_tshell("-c", cmd)
+            self.assertEqual(proc.returncode, 0, proc.stderr)
+            self.assertIn("Active Violations on Current Design", proc.stdout)
+            self.assertIn("Clock float_clk cannot reach", proc.stdout)
+
 
 if __name__ == "__main__":
     unittest.main()

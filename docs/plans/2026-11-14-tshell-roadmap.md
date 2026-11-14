@@ -195,3 +195,28 @@ flowchart TD
   - Ma trận kiểm thử: Ubuntu-latest và macOS-latest.
   - Phiên bản Python: 3.9, 3.10, 3.11, 3.12, 3.13, 3.14.
   - Chạy toàn bộ test suite (`pytest -v`) và kiểm tra chuẩn cú pháp code.
+
+---
+
+## C. Cập nhật giải quyết 6 điểm Review trọng yếu (Post-31c046c Review Resolution)
+
+**Ghi chú sau khi hợp nhất:** Phần dưới ghi lại trạng thái tại thời điểm commit trước. Bản hiện tại từ chối `write_tsdb_data` vì chưa có TSDB/STIL hoàn chỉnh, chỉ giữ metadata trong knowledge DB và đọc trực tiếp PDF do người dùng cung cấp; không dùng `--include-page-text`. Parser và DRC vẫn có phạm vi giới hạn như mô tả trong README, chưa coi là hoàn thiện hoặc được xác thực.
+
+Dựa trên kết quả review chi tiết sau commit `31c046c`, các vấn đề sau đã được xác nhận và khắc phục triệt để:
+
+1. **Bảo vệ dữ liệu TSDB khỏi ghi đè (`write_tsdb_data`)**:
+   - Thêm cờ `-replace`. Nếu các file view TSDB đã tồn tại trong thư mục đích, lệnh sẽ từ chối ghi đè và yêu cầu người dùng xác nhận rõ ràng với `write_tsdb_data -replace`.
+   - Xuất đúng nội dung Verilog thiết kế thực tế đang nạp (`raw_verilog_text`) và xuất vector mẫu STIL thực thụ thay vì ghi đè bằng comment header rỗng.
+2. **Minh bạch vi phạm DRC thật (`report_drc_rules`)**:
+   - Báo cáo DRC luôn ưu tiên hiển thị các vi phạm thực tế đang ghi nhận trên thiết kế nạp trong phiên trước khi in đoạn trích tham khảo lý thuyết từ sách. Không bao giờ để trích đoạn manual che mất lỗi của thiết kế.
+3. **Xóa sạch trạng thái cũ khi nạp thiết kế mới (`load_verilog`)**:
+   - Khi gọi `load_verilog`, FSM tự động reset sạch sẽ: danh sách scan chain, clock definitions, pin constraints, lỗi DRC cũ, thống kê ATPG và danh sách fault của mạch trước, tránh hiện tượng rò rỉ trạng thái giữa các mạch khác nhau.
+4. **Chuẩn hóa Parser & Mô phỏng Scan Multiplexer / Cạnh Clock**:
+   - Parser Verilog tự động phân tích cả nhánh shift (`scan_en = 1`) và nhánh capture (`scan_en = 0`), sinh phần tử MUX 2:1 cho từng scan flip-flop. Sửa dứt điểm lỗi DFF $d=a$ ở chế độ capture bị gán nhầm thành 0 khi $a=1$.
+   - Đồng thời, `clock_edge` kiểm tra trạng thái kẹt của clock: khi clock bị stuck-at-1 hoặc stuck-at-0, không có sườn chuyển đổi mức tích cực $0 \to 1$, do đó các flip-flop giữ nguyên trạng thái cũ thay vì tự động cập nhật.
+5. **Đảm bảo khả năng chạy sạch trên fresh Git clone**:
+   - Bổ sung `examples/serial_adder_scan.v` trực tiếp vào Git (tránh phụ thuộc vào thư mục `output/` bị `.gitignore`).
+   - Sửa logic phân giải đường dẫn tương đối trong `read_verilog` để ưu tiên tìm từ thư mục làm việc hiện tại của người dùng (`Path.cwd()`) trước khi tìm trong thư mục package.
+6. **Tuân thủ Bản quyền & Zero-Asset Policy trong Knowledge DB**:
+   - Gỡ bỏ toàn bộ văn bản nguyên văn 20 trang sách (`page_texts`) khỏi file `knowledge_db.json` phân phối trong Git. File chỉ lưu trữ metadata tra cứu factual (Rule ID, Family, số trang, lệnh CLI và chuỗi lỗi chức năng).
+   - Người dùng có file PDF hợp lệ có thể chạy `tools/build_knowledge_db.py --pdf <path> --include-page-text` để trích xuất toàn văn phục vụ học tập cá nhân offline. Cập nhật `LEGAL.md` tương ứng để đồng nhất tuyệt đối.

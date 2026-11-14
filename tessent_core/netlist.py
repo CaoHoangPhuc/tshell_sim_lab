@@ -79,8 +79,8 @@ class Gate:
             return in_values.get("d1", Logic4.X) if in_values.get("sel") == Logic4.ONE else in_values.get("d0", Logic4.X)
         if gt == "MUX":
             sel = in_values.get("sel", in_values.get("scan_en", Logic4.ZERO))
-            d0 = in_values.get("d0", in_values.get("d", Logic4.X))
-            d1 = in_values.get("d1", in_values.get("scan_in", Logic4.X))
+            d0 = in_values.get("d0", in_values.get("in0", in_values.get("d", Logic4.X)))
+            d1 = in_values.get("d1", in_values.get("in1", in_values.get("scan_in", Logic4.X)))
             return mux21(sel, d0, d1)
         if gt == "DFF":
             return self.internal_state
@@ -317,16 +317,23 @@ class _SubsetParser:
         return left
 
     def assignment_block(self) -> dict[str, tuple]:
-        self.take('begin')
+        compound = self.peek() == 'begin'
+        if compound:
+            self.take('begin')
         result = {}
-        while self.peek() != 'end':
+        while True:
+            if compound and self.peek() == 'end':
+                break
             target = self.name()
             if target in result:
                 self.fail('duplicate register assignment')
             self.take('<=')
             result[target] = self.expression()
             self.take(';')
-        self.take('end')
+            if not compound:
+                break
+        if compound:
+            self.take('end')
         return result
 
     def temp(self, label: str) -> str:
@@ -376,6 +383,10 @@ class _SubsetParser:
             names = self.names(); self.take(';')
             for name in names:
                 if name in self.declared:
+                    # Classic Verilog permits output q; reg q; for an output register.
+                    if kind == 'reg' and name in self.outputs and name not in self.regs:
+                        self.regs.add(name)
+                        continue
                     self.fail(f"duplicate declaration {name!r}")
                 self.declared.add(name)
                 if kind == 'input':
@@ -414,13 +425,16 @@ class _SubsetParser:
                 if clk != 'clk' or clk not in self.inputs:
                     self.fail("unsupported clock: only the primary input 'clk' is supported")
                 self.take('if'); self.take('('); reset = self.name(); self.take(')')
-                resets = self.assignment_block(); self.take('else'); self.take('if')
-                self.take('('); scan_en = self.name(); self.take(')')
-                shifts = self.assignment_block(); self.take('else')
+                resets = self.assignment_block(); self.take('else')
+                scan_en = None
+                shifts = None
+                if self.peek() == 'if':
+                    self.take('if'); self.take('('); scan_en = self.name(); self.take(')')
+                    shifts = self.assignment_block(); self.take('else')
                 captures = self.assignment_block(); self.take('end')
-                if clk not in self.declared or reset not in self.declared or scan_en not in self.declared:
-                    self.fail('undeclared clock, reset or scan enable')
-                if not resets or set(resets) != set(shifts) or set(resets) != set(captures):
+                if reset not in self.declared or (scan_en is not None and scan_en not in self.declared):
+                    self.fail('undeclared reset or scan enable')
+                if not resets or set(resets) != set(captures) or (shifts is not None and set(resets) != set(shifts)):
                     self.fail('reset, shift and capture must assign the same registers')
                 if any(expr != ('literal', '0') for expr in resets.values()):
                     self.fail('only synchronous active-high reset to zero is supported')
@@ -428,12 +442,17 @@ class _SubsetParser:
                     if dest not in self.regs:
                         self.fail(f"expected declared register {dest!r}")
                     self.drive(dest)
-                    d0 = self.expr_net(captures[dest]); d1 = self.expr_net(shifts[dest])
-                    mux_net = self.temp('scan_mux')
-                    self.graph.add_gate(Gate(mux_net, 'IFMUX', {'sel': scan_en, 'd0': d0, 'd1': d1}, {'out': mux_net}))
+                    d_net = self.expr_net(captures[dest])
+                    if shifts is not None:
+                        d1 = self.expr_net(shifts[dest])
+                        mux_net = self.temp('scan_mux')
+                        self.graph.add_gate(Gate(mux_net, 'IFMUX', {'sel': scan_en, 'd0': d_net, 'd1': d1}, {'out': mux_net}))
+                        d_net = mux_net
                     if f'dff_{dest}' in self.graph.gates:
                         self.fail(f'duplicate gate name dff_{dest!s}')
-                    self.graph.add_gate(Gate(f'dff_{dest}', 'DFF', {'clk': clk, 'reset': reset, 'd': mux_net}, {'Q': dest}))
+                    self.graph.add_gate(Gate(f'dff_{dest}', 'DFF', {'clk': clk, 'reset': reset, 'd': d_net}, {'Q': dest}))
+                    if shifts is None:
+                        self.graph.scan_cells.remove(f'dff_{dest}')
             else:
                 self.fail('unsupported Verilog statement')
         self.take('endmodule')
