@@ -251,17 +251,13 @@
       "rule_id": "C1",
       "family": "Clock Rules (C Rules)",
       "title": "C1",
-      "page": 3809,
-      "summary": "C1\nCategory: Clock\nContexts Supported: dft -scan, dft -test_points, patterns -scan, patterns -scan_diagnosis\nDefault Handling: Error\nreport_drc_rules: Supported\nA scan or non-scan cell must not capture data when all specified clocks are set to their off states.\nWhen all clocks are at their off state as defined with the add_clocks command, all clock inputs (including\nsets and resets) of scan and non-scan cells must be at their off state. For non-scan cell violations, the tool\nconverts these to TIEX.\nIn the case of a DFF scan cell, the clock input must be a stable binary value (0 or 1).\nNote\nIf the clock input value of a DFF scan cell simulates as X, the tool by default performs additional analysis",
-      "reference_excerpt": "// Error: Clock PIs off failed to force off a clock line of /U$1/DFF1 \n// (14). (C1-1)"
+      "page": 3809
     },
     "C2": {
       "rule_id": "C2",
       "family": "Clock Rules (C Rules)",
       "title": "C2",
-      "page": 3814,
-      "summary": "C2\nContexts Supported: dft -scan, dft -test_points, patterns -scan, patterns -scan_diagnosis\nDefault Handling: Warning\nreport_drc_rules: Supported\nEach clock must have a structural path to the clock port of at least one memory element. The application\nperforms this check by a backward tracing from the clock port, SET/RESET port, and read/write enables of\nall memory elements toward primary inputs. The rule violation occurs if a clock primary input cannot be\nreached.\nWhen an error condition occurs, you can access the simulated values by setting the gate reporting to\nerror_pattern and using the report_gates command. Defining a pin to be a clock, when it does not behave\nas a clock, is the most usual cause of this error condition. The default handling for this rule violation in all\ncontexts is warning. Failure to satisfy this rule indicates a defined clock cannot capture data, thus reducing",
-      "reference_excerpt": "// Warning: Clock clk cannot reach the clock port of any memory element. (C2-1)"
+      "page": 3814
     },
     "C3": {
       "rule_id": "C3",
@@ -375,9 +371,7 @@
       "rule_id": "D1",
       "family": "Scan Cell Data Rules (D Rules)",
       "title": "D1",
-      "page": 3863,
-      "summary": "D1\nCategory: Data\nContexts Supported: dft -scan, dft -test_points, patterns -scan, patterns -scan_diagnosis\nDefault Handling: Error\nreport_drc_rules: Supported\nChecks for the possible disturbance of data values loaded or captured into scan cells.\nDuring the application of the test procedures, if other circuitry disturbs the data values loaded or captured\ninto scan cells, those cells cannot be controlled or observed. The tool performs this check using the\nsimulated values of each time period of the test procedures. A violation occurs if any clock input (including\nset and reset lines) of any scan cell allows data capture at an inappropriate time, in which case the control\nvalue loaded or the capture value unloaded from the scan cell cannot be trusted. Common sources of D1\nviolations are undefined clocks, problems in the test procedure file, or possibly design errors.",
-      "reference_excerpt": "//  ERROR: /dataot/reg_q_0_ (373) disturbed during time 0 of grp1 \n//         load_unload procedure. (D1-1)"
+      "page": 3863
     },
     "D2": {
       "rule_id": "D2",
@@ -3233,25 +3227,19 @@
       "rule_id": "T3",
       "family": "Scan Chain Trace Rules (T Rules)",
       "title": "T3",
-      "page": 4520,
-      "summary": "T3\nCategory: Trace\nContexts Supported: dft -scan, dft -test_points, patterns -scan, patterns -scan_diagnosis\nDefault Handling: Error (cannot be changed with the set_drc_handling command)\nreport_drc_rules: Supported\nThe shift procedure must create a sensitizable path from the scan chain output back to the scan chain\ninput. An improperly sensitized gate in the scan path causes an error condition, which the tool reports as a\nT3 DRC violation.\nThe occurrence message is\nScan chain S blocked at gate N (G) after tracing C cells. (T3-1)\nS is the scan chain name, N is the instance name, G is its gate ID number, and C is the number of scan cells\ntraced in the scan chain.",
-      "reference_excerpt": "//  Error: Scan chain chain1 blocked at gate /reg2/df2 (39) after tracing 1 \ncells.  (T3-1)"
+      "page": 4520
     },
     "T4": {
       "rule_id": "T4",
       "family": "Scan Chain Trace Rules (T Rules)",
       "title": "T4",
-      "page": 4525,
-      "summary": "T4\nCategory: Trace\nContexts Supported: dft -scan, dft -test_points, patterns -scan, patterns -scan_diagnosis\nDefault Handling: Error (cannot be changed with the set_drc_handling command)\nreport_drc_rules: Not Supported\nA memory element in the scan path must have an active clock during some time period of the shift\nprocedure. Correct this error condition by accessing the simulated values of all time periods of the shift\nprocedure. You do this by setting the gate reporting to trace and using the report_gates command for the\ngate ID number displayed in the error message. This can help you identify where the problem occurred;\ntracing back from the inputs helps you identify how to correct the problem.\nThe error message is:\nClock inputs of N (G) never set active during shift procedure. (T4-1)",
-      "reference_excerpt": "//  Error: Clock inputs of /datao/reg_q_0_ (360) never set active during\n//  shift procedure.  (T4-1)"
+      "page": 4525
     },
     "T5": {
       "rule_id": "T5",
       "family": "Scan Chain Trace Rules (T Rules)",
       "title": "T5",
-      "page": 4529,
-      "summary": "T5\nCategory: Trace\nContexts Supported: dft -scan, dft -test_points, patterns -scan, patterns -scan_diagnosis\nDefault Handling: Error (cannot be changed with the set_drc_handling command)\nreport_drc_rules: Supported\nDuring the shift procedure, you must never place an X value on a clock input or an active (X or 1) value on\na set or reset input of a memory element in the scan path. The T5 DRC reports such issues.\nThe error message is:\nT input of N (G) set to V. (T5-1)\nT is the type of input (clock, set, or reset), N is the instance name, G is its gate ID number, and V is the\ninvalid state.\nThe summary message is:",
-      "reference_excerpt": "//  Error: clock input of /datao/reg_q_0_ (360) set to X.  (T5-1)"
+      "page": 4529
     },
     "T6": {
       "rule_id": "T6",
@@ -3619,8 +3607,6 @@
       "case_id": "case01",
       "rule": "T3",
       "title": "Scan chain trace blocked at gate",
-      "strobe_page": 4522,
-      "printed_pages": "12-790–12-792",
       "pdf_pages": [
         4522,
         4523,
@@ -3628,32 +3614,13 @@
       ],
       "first_page": 4522,
       "last_page": 4524,
-      "excerpt": "//  Error: Scan chain chain1 blocked at gate /reg2/df2 (39) after tracing 1 \ncells.  (T3-1)",
-      "commands": {
-        "4522": [
-          "set_trace_report on",
-          "set_gate_level primitive",
-          "set_gate_report trace"
-        ],
-        "4523": [
-          "set_system_mode analysis",
-          "report_gate /reg2/df2",
-          "set_gate_level design",
-          "report_gate /reg2/df2",
-          "report_gates /uu1"
-        ],
-        "4524": [
-          "report_gates /ten_reg"
-        ]
-      },
-      "page_texts": {}
+      "printed_pages": "12-790–12-792",
+      "strobe_page": 4522
     },
     "case02": {
       "case_id": "case02",
       "rule": "T4",
-      "title": "Scan chain trace clock inputs violation",
-      "strobe_page": 4525,
-      "printed_pages": "12-793–12-796",
+      "title": "Scan chain clock activity",
       "pdf_pages": [
         4525,
         4526,
@@ -3662,16 +3629,13 @@
       ],
       "first_page": 4525,
       "last_page": 4528,
-      "excerpt": "//  Error: Clock inputs of /datao/reg_q_0_ (360) never set active during\n//  shift procedure.  (T4-1)",
-      "commands": {},
-      "page_texts": {}
+      "printed_pages": "12-793–12-796",
+      "strobe_page": 4525
     },
     "case03": {
       "case_id": "case03",
       "rule": "T5",
-      "title": "Clock has X value during scan chain trace",
-      "strobe_page": 4529,
-      "printed_pages": "12-797–12-799",
+      "title": "Unknown scan chain clock",
       "pdf_pages": [
         4529,
         4530,
@@ -3679,16 +3643,13 @@
       ],
       "first_page": 4529,
       "last_page": 4531,
-      "excerpt": "//  Error: clock input of /datao/reg_q_0_ (360) set to X.  (T5-1)\n//  Error: Scan chain chain1 blocked at gate /datao/reg_q_0_ (360)\n//  after tracing 0 cells.  (T3-1)",
-      "commands": {},
-      "page_texts": {}
+      "printed_pages": "12-797–12-799",
+      "strobe_page": 4529
     },
     "case04": {
       "case_id": "case04",
       "rule": "C1",
-      "title": "Clock PIs off failed to force off a clock line of memory element",
-      "strobe_page": 3812,
-      "printed_pages": "12-77–12-82",
+      "title": "Clock off-state",
       "pdf_pages": [
         3809,
         3810,
@@ -3699,16 +3660,13 @@
       ],
       "first_page": 3809,
       "last_page": 3814,
-      "excerpt": "// Error: Clock PIs off failed to force off a clock line of /U$1/DFF1 \n// (14). (C1-1)",
-      "commands": {},
-      "page_texts": {}
+      "printed_pages": "12-77–12-82",
+      "strobe_page": 3812
     },
     "case05": {
       "case_id": "case05",
       "rule": "D1",
-      "title": "Scan cell disturbed during load_unload procedure",
-      "strobe_page": 3865,
-      "printed_pages": "12-131–12-134",
+      "title": "Scan cell disturbance",
       "pdf_pages": [
         3863,
         3864,
@@ -3717,9 +3675,8 @@
       ],
       "first_page": 3863,
       "last_page": 3866,
-      "excerpt": "//  ERROR: /dataot/reg_q_0_ (373) disturbed during time 0 of grp1 \n//         load_unload procedure. (D1-1)",
-      "commands": {},
-      "page_texts": {}
+      "printed_pages": "12-131–12-134",
+      "strobe_page": 3865
     }
   }
 }

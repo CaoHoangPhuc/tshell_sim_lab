@@ -13,6 +13,7 @@ import argparse
 import cmd
 import shlex
 import sys
+import tempfile
 from pathlib import Path
 
 LAB_DIR = Path(__file__).resolve().parent
@@ -42,7 +43,8 @@ class TessentShell(cmd.Cmd):
         self.gate_level: str = "primitive"  # primitive or design
         self.gate_report: str = "trace"  # trace or error_pattern
         self.trace_report: bool = True
-        self.tsdb_dir: Path = LAB_DIR / "tsdb"
+        self.tsdb_dir: Path = Path.cwd() / "tsdb"
+        self.failed = False
         self.update_prompt()
 
     def update_prompt(self) -> None:
@@ -55,18 +57,27 @@ class TessentShell(cmd.Cmd):
             return ""
         return line
 
+    def error(self, message: str) -> None:
+        self.failed = True
+        print(f"//  Error: {message}")
+
     def onecmd(self, line: str) -> bool:
+        self.failed = False
         line = self.precmd(line)
         if not line:
             return self.emptyline()
-        return super().onecmd(line)
+        try:
+            return super().onecmd(line)
+        except (ValueError, OSError) as exc:
+            self.error(str(exc))
+            return False
 
     def emptyline(self) -> bool:
         return False
 
     def default(self, line: str) -> bool:
         cmd_name = line.split()[0] if line.split() else ""
-        print(f"//  Error: Unknown command or syntax error: '{cmd_name}'. Type 'help' for available commands.")
+        self.error(f"Unknown command or syntax error: '{cmd_name}'. Type 'help' for available commands.")
         return False
 
     def do_set_context(self, arg: str) -> None:
@@ -75,8 +86,11 @@ class TessentShell(cmd.Cmd):
         if not args:
             print(f"//  Current context: {self.fsm.context}")
             return
-        _, msg = self.fsm.set_context(args)
-        print(msg)
+        ok, msg = self.fsm.set_context(args)
+        if ok:
+            print(msg)
+        else:
+            self.error(msg.replace("//  Error: ", "", 1))
 
     def do_report_context(self, arg: str) -> None:
         """report_context : Display current context"""
@@ -86,9 +100,11 @@ class TessentShell(cmd.Cmd):
         """set_system_mode <setup | analysis> : Switch system mode (triggers DRC on setup -> analysis)"""
         mode = arg.strip().lower()
         ok, msg = self.fsm.set_system_mode(mode)
-        print(msg)
         if ok:
+            print(msg)
             self.update_prompt()
+        else:
+            self.error(msg.replace("//  Error: ", "", 1))
 
     def do_report_system_mode(self, arg: str) -> None:
         """report_system_mode : Display current system mode"""
@@ -96,23 +112,18 @@ class TessentShell(cmd.Cmd):
 
     def do_read_verilog(self, arg: str) -> None:
         """read_verilog <filepath> : Read design netlist in Verilog format"""
-        path_str = arg.strip()
-        if not path_str:
-            print("//  Error: Missing file argument.")
+        parts = shlex.split(arg)
+        if len(parts) != 1:
+            self.error("Usage: read_verilog <filepath>")
             return
-        path = Path(path_str).expanduser()
+        path = Path(parts[0]).expanduser()
         if not path.is_absolute():
-            # Check user's current working directory first, fallback to package root (LAB_DIR)
-            cwd_candidate = (Path.cwd() / path).resolve()
-            lab_candidate = (LAB_DIR / path).resolve()
-            if cwd_candidate.is_file():
-                path = cwd_candidate
-            elif lab_candidate.is_file():
-                path = lab_candidate
-            else:
-                path = cwd_candidate
+            path = (Path.cwd() / path).resolve()
         ok, msg = self.fsm.load_verilog(path)
-        print(msg)
+        if ok:
+            print(msg)
+        else:
+            self.error(msg.replace("//  Error: ", "", 1))
 
     def do_report_design(self, arg: str) -> None:
         """report_design : Display loaded design overview"""
@@ -131,26 +142,20 @@ class TessentShell(cmd.Cmd):
     def do_add_clocks(self, arg: str) -> None:
         """add_clocks [<off_state>] <pin> [-off_state <0|1>] : Define clock port and its off state"""
         parts = shlex.split(arg)
-        if not parts:
-            print("//  Error: Usage: add_clocks [<off_state>] <pin> [-off_state <0|1>]")
+        if len(parts) >= 2 and parts[0] in ("0", "1"):
+            off_state, pins = int(parts[0]), parts[1:]
+        elif len(parts) == 1 and not parts[0].startswith("-"):
+            off_state, pins = 0, parts
+        elif len(parts) == 3 and parts[1] == "-off_state" and parts[2] in ("0", "1"):
+            off_state, pins = int(parts[2]), parts[:1]
+        else:
+            self.error("Usage: add_clocks [<0|1>] <pin>... or add_clocks <pin> -off_state <0|1>")
             return
-        # Support positional syntax: add_clocks <off_state> <pin> (Siemens Manual p. 131)
-        if parts[0] in ("0", "1") and len(parts) >= 2:
-            off_state = int(parts[0])
-            for pin in parts[1:]:
-                if not pin.startswith("-"):
-                    print(self.fsm.add_clock(pin, off_state=off_state))
+        if any(pin.startswith("-") for pin in pins):
+            self.error("Invalid clock pin.")
             return
-        pin = parts[0]
-        off_state = 0
-        if "-off_state" in parts:
-            idx = parts.index("-off_state")
-            if idx + 1 < len(parts):
-                try:
-                    off_state = int(parts[idx + 1])
-                except ValueError:
-                    off_state = 0
-        print(self.fsm.add_clock(pin, off_state=off_state))
+        for pin in pins:
+            print(self.fsm.add_clock(pin, off_state=off_state))
 
     def do_report_clocks(self, arg: str) -> None:
         """report_clocks : Display defined clocks"""
@@ -176,17 +181,20 @@ class TessentShell(cmd.Cmd):
 
     def do_check_design_rules(self, arg: str) -> None:
         """check_design_rules : Run DRC checks on design"""
+        if not self.fsm.raw_verilog_text:
+            self.error("No design loaded for DRC.")
+            return
         violations = self.fsm.run_drc()
         print("//  ----------------------------------------------------------------")
         print("//  Performing Design Rule Checking (DRC)...")
         print(f"//  Context: {self.fsm.context} | System mode: {self.fsm.system_mode}")
         print("//  ----------------------------------------------------------------")
         if not violations:
-            print("//  DRC analysis completed with 0 errors and 0 warnings.")
+            print("//  No violations found by preliminary checks; DRC is incomplete and cannot establish that the design is clean.")
         else:
             for v in violations:
                 print(f"//  {v.severity}: {v.message} ({v.rule_id})")
-            print(f"//  DRC analysis completed with {len(violations)} rule violation(s).")
+            print(f"//  Preliminary DRC found {len(violations)} possible violation(s); checks are incomplete.")
 
     def do_report_drc_rules(self, arg: str) -> None:
         """report_drc_rules [<rule_id>] : Report DRC rules or detailed violation excerpt from manual"""
@@ -200,13 +208,13 @@ class TessentShell(cmd.Cmd):
                 for m in matches:
                     print(f"//  {m.severity}: {m.message} ({m.rule_id})")
             else:
-                print(f"//  Current Design Status: No active {rule_id.upper()} violations detected.")
+                print(f"//  No recorded {rule_id.upper()} violations; checks may not have run and are incomplete.")
 
             # 2. Display reference manual excerpt or catalog documentation
             excerpt = self.fsm.drc_engine.get_rule_excerpt(rule_id)
             rule_info = self.fsm.drc_engine.get_rule_info(rule_id)
             if excerpt:
-                print(f"//  --- DRC Rule Excerpt from Reference Manual ({rule_id.upper()}) ---")
+                print(f"//  --- Reference Manual Excerpt ({rule_id.upper()}) ---")
                 print(excerpt)
             elif rule_info:
                 print(f"//  Rule: {rule_info['rule_id']} — {rule_info['title']}")
@@ -230,7 +238,7 @@ class TessentShell(cmd.Cmd):
             }
             for r, desc in rules_desc.items():
                 sev = self.fsm.drc_engine.handling_overrides.get(r, "Error")
-                print(f"//  {r:<6} {sev:<10} {'Supported':<18} {desc}")
+                print(f"//  {r:<6} {sev:<10} {'Incomplete':<18} {desc}")
             total_catalog = len(self.fsm.drc_engine.catalog)
             print(f"//  -------------------------------------------------------------")
             print(f"//  [DRC Catalog]: Total {total_catalog} rules indexed across 25 families in Chapter 12.")
@@ -244,13 +252,13 @@ class TessentShell(cmd.Cmd):
             self.fsm.drc_engine.handling_overrides[rule] = sev
             print(f"//  DRC rule {rule} handling set to: {sev}")
         else:
-            print("//  Usage: set_drc_handling <rule> <Error | Warning | Note | Ignore>")
+            self.error("Usage: set_drc_handling <rule> <Error | Warning | Note | Ignore>")
 
     def do_report_gate(self, arg: str) -> None:
         """report_gate <gate_id_or_name> : Report gate connectivity and logic details"""
         gate_name = arg.strip()
         if not gate_name:
-            print("//  Usage: report_gate <id_or_name>")
+            self.error("Usage: report_gate <id_or_name>")
             return
         g = self.fsm.circuit.gates.get(gate_name)
         if not g:
@@ -265,18 +273,7 @@ class TessentShell(cmd.Cmd):
                 val = self.fsm.circuit.nets.get(n, Logic4.X)
                 print(f"      {p:<6} O  ({val})  {n}")
         else:
-            # Fallback for book transcript gates (like 14, 373, /reg2/df2)
-            print(f"//  Gate: {gate_name}")
-            print(f"//  Level: {self.gate_level} | Report Mode: {self.gate_report}")
-            if "14" in gate_name or "dff" in gate_name.lower() or "q0" in gate_name.lower():
-                print("  /reg/q0 (14) DFF")
-                print("      CLK    I  (1)  clk")
-                print("      D      I  (0)  scan_in")
-                print("      Q      O  (0)  q0")
-            else:
-                print(f"  {gate_name} (39) PRIMITIVE")
-                print("      IN0    I  (1)  scan_in")
-                print("      OUT    O  (1)  scan_out")
+            self.error(f"Gate '{gate_name}' not found in the loaded design.")
 
     def do_report_gates(self, arg: str) -> None:
         """report_gates <gate_id_or_name> : Alias for report_gate"""
@@ -289,7 +286,7 @@ class TessentShell(cmd.Cmd):
             self.gate_level = lvl
             print(f"//  Gate level set to: {lvl}")
         else:
-            print("//  Usage: set_gate_level <primitive | design>")
+            self.error("Usage: set_gate_level <primitive | design>")
 
     def do_set_gate_report(self, arg: str) -> None:
         """set_gate_report <trace | error_pattern>"""
@@ -298,17 +295,26 @@ class TessentShell(cmd.Cmd):
             self.gate_report = rpt
             print(f"//  Gate report set to: {rpt}")
         else:
-            print("//  Usage: set_gate_report <trace | error_pattern>")
+            self.error("Usage: set_gate_report <trace | error_pattern>")
 
     def do_set_trace_report(self, arg: str) -> None:
         """set_trace_report <on | off>"""
         val = arg.strip().lower()
+        if val not in ("on", "off"):
+            self.error("Usage: set_trace_report <on | off>")
+            return
         self.trace_report = (val == "on")
         print(f"//  Trace report: {'on' if self.trace_report else 'off'}")
 
     def do_add_faults(self, arg: str) -> None:
         """add_faults [-all | <node>] : Populate fault list"""
-        print(self.fsm.add_faults(arg.strip() or "-all"))
+        if not self.fsm.raw_verilog_text:
+            self.error("No design loaded.")
+            return
+        if arg.strip() not in ("", "-all"):
+            self.error("Only add_faults -all is supported.")
+            return
+        print(self.fsm.add_faults("-all"))
 
     def do_report_faults(self, arg: str) -> None:
         """report_faults [-summary | -all] : Display modeled faults"""
@@ -321,10 +327,13 @@ class TessentShell(cmd.Cmd):
             print(f"//  {f.node:<20} {f.fault_type:<12} {f.status.value}")
 
     def do_create_patterns(self, arg: str) -> None:
-        """create_patterns : Generate deterministic ATPG patterns"""
+        """create_patterns : Generate heuristic demonstration patterns."""
+        if not self.fsm.raw_verilog_text:
+            self.error("No design loaded.")
+            return
         patterns = self.fsm.create_patterns()
         print("//  Generating test patterns for scan chains...")
-        print(f"//  ATPG pattern generation completed: {len(patterns)} test patterns created.")
+        print(f"//  Generated {len(patterns)} heuristic demonstration patterns (not validated ATPG).")
 
     def do_report_patterns(self, arg: str) -> None:
         """report_patterns : Display generated ATPG patterns"""
@@ -341,9 +350,12 @@ class TessentShell(cmd.Cmd):
 
     def do_simulate_patterns(self, arg: str) -> None:
         """simulate_patterns : Simulate patterns and evaluate IEEE fault coverage"""
+        if not self.fsm.raw_verilog_text:
+            self.error("No design loaded.")
+            return
         stats = self.fsm.simulate_patterns()
         print("//  ----------------------------------------------------------------")
-        print("//  Running Pattern Simulation & Fault Grading...")
+        print("//  Running Demonstration Pattern Simulation & Fault Grading (not validated)...")
         print("//  ----------------------------------------------------------------")
         print(f"//  Simulated {stats.patterns_count} patterns.")
         print(f"//  Total faults: {stats.total_faults}")
@@ -355,7 +367,7 @@ class TessentShell(cmd.Cmd):
         """report_statistics : Display ATPG and fault coverage statistics"""
         stats = self.fsm.last_statistics
         print("//  -------------------------------------------------------------")
-        print("//  Tessent ATPG / Fault Simulation Statistics")
+        print("//  Demonstration Fault Simulation Statistics (not validated)")
         print("//  -------------------------------------------------------------")
         print(f"//  Total Faults Modeled:    {stats.total_faults}")
         print(f"//  Detected Faults (DS):    {stats.detected_sim}")
@@ -372,7 +384,7 @@ class TessentShell(cmd.Cmd):
             return
         path = Path(p).expanduser()
         if not path.is_absolute():
-            path = (LAB_DIR / path).resolve()
+            path = (Path.cwd() / path).resolve()
         self.tsdb_dir = path
         self.tsdb_dir.mkdir(parents=True, exist_ok=True)
         print(f"//  TSDB output directory set to: {self.tsdb_dir}")
@@ -391,56 +403,8 @@ class TessentShell(cmd.Cmd):
         print("//  -------------------------------------------------------------")
 
     def do_write_tsdb_data(self, arg: str) -> None:
-        """write_tsdb_data [-replace] : Export current design netlist and pattern views to TSDB"""
-        if not self.fsm.circuit.name:
-            print("//  Error: No design loaded to write to TSDB.")
-            return
-        args = shlex.split(arg)
-        replace = "-replace" in args
-        self.tsdb_dir.mkdir(parents=True, exist_ok=True)
-        des_dir = self.tsdb_dir / "dft_inserted_designs"
-        pat_dir = self.tsdb_dir / "patterns"
-        inst_dir = self.tsdb_dir / "instruments"
-        des_dir.mkdir(parents=True, exist_ok=True)
-        pat_dir.mkdir(parents=True, exist_ok=True)
-        inst_dir.mkdir(parents=True, exist_ok=True)
-
-        mod = self.fsm.circuit.name
-        v_out = des_dir / f"{mod}.v"
-        stil_out = pat_dir / f"{mod}.stil"
-
-        # Protect existing files from accidental overwrite
-        if (v_out.exists() or stil_out.exists()) and not replace:
-            print(f"//  Error: TSDB data for module '{mod}' already exists in {self.tsdb_dir}.")
-            print("//  Use 'write_tsdb_data -replace' if you intend to overwrite existing views.")
-            return
-
-        # Write actual loaded design netlist
-        if self.fsm.raw_verilog_text:
-            v_out.write_text(self.fsm.raw_verilog_text, encoding="utf-8")
-        else:
-            v_out.write_text(f"// TSDB Inserted Design: {mod}\n// Verified by Tessent Shell 2026.2\n", encoding="utf-8")
-
-        # Write pattern STIL with actual generated patterns
-        patterns = self.fsm.atpg_engine.patterns
-        stil_lines = [
-            "STIL 1.0;",
-            f"// Design: {mod}",
-            f"// Generated Patterns: {len(patterns)}",
-            f"// Test Coverage: {self.fsm.last_statistics.test_coverage:.2f}%",
-            "PatternBurst \"all_patterns\" {",
-        ]
-        for idx, pat in enumerate(patterns):
-            scan_str = "".join(str(b) for b in pat.get("shift_in", []))
-            pi_str = ", ".join(f"{k}={v}" for k, v in pat.items() if k != "shift_in")
-            stil_lines.append(f"  // Pattern {idx}: scan_in={scan_str} {pi_str}")
-        stil_lines.append("}")
-        stil_out.write_text("\n".join(stil_lines) + "\n", encoding="utf-8")
-
-        print("//  Writing data to Tessent Shell Database (TSDB)...")
-        print(f"//  [TSDB View: dft_inserted_designs] -> {v_out}")
-        print(f"//  [TSDB View: patterns]             -> {stil_out}")
-        print("//  TSDB synchronization complete.")
+        """write_tsdb_data : TSDB export is not implemented."""
+        self.error("TSDB/STIL export is not implemented; no files were written.")
 
     def do_report_architecture(self, arg: str) -> None:
         """report_architecture : Display the full DFT System Architecture Overview"""
@@ -465,12 +429,14 @@ class TessentShell(cmd.Cmd):
 
     def do_source(self, arg: str) -> None:
         """source <script.do> : Run commands from a dofile"""
-        path_str = arg.strip()
+        parts = shlex.split(arg)
+        if len(parts) != 1:
+            self.error("Usage: source <script.do>")
+            return
+        path_str = parts[0]
         path = Path(path_str).expanduser()
         if not path.is_file():
-            path = LAB_DIR / path_str
-        if not path.is_file():
-            print(f"//  Error: Script file '{path_str}' not found.")
+            self.error(f"Script file '{path_str}' not found.")
             return
         lines = path.read_text(encoding="utf-8").splitlines()
         print(f"//  Executing script '{path.name}' ({len(lines)} lines)...")
@@ -479,7 +445,9 @@ class TessentShell(cmd.Cmd):
             if not line or line.startswith("//") or line.startswith("#"):
                 continue
             print(f"tshell> {line}")
-            self.onecmd(line)
+            stop = self.onecmd(line)
+            if self.failed or stop:
+                return stop
 
     def do_exit(self, arg: str) -> bool:
         """exit : Exit Tessent Shell"""
@@ -492,27 +460,36 @@ class TessentShell(cmd.Cmd):
 
 
 def run_demo() -> int:
-    """Run an automated demo workflow."""
+    """Run the demo using a temporary generated netlist, including after installation."""
+    from insertion import EXAMPLE, insert_scan
+
     shell = TessentShell()
-    commands = [
-        "set_context patterns -scan",
-        "read_verilog examples/serial_adder_scan.v",
-        "report_design",
-        "add_clocks clk -off_state 0",
-        "report_clocks",
-        "set_system_mode analysis",
-        "report_drc_rules t3-1",
-        "report_drc_rules c1-1",
-        "add_faults -all",
-        "create_patterns",
-        "simulate_patterns",
-        "report_statistics",
-    ]
-    print("//  Running Tessent Shell Demonstration Workflow...\n")
-    for cmd_str in commands:
-        print(f"tshell ({shell.fsm.system_mode.upper()})> {cmd_str}")
-        shell.onecmd(cmd_str)
-        print()
+    with tempfile.TemporaryDirectory() as directory:
+        design = Path(directory) / "serial_adder_scan.v"
+        design.write_text(insert_scan(EXAMPLE)[0], encoding="utf-8")
+        commands = [
+            "set_context patterns -scan",
+            f"read_verilog {shlex.quote(str(design))}",
+            "report_design",
+            "add_clocks 0 clk",
+            "report_clocks",
+            "set_system_mode analysis",
+            "report_drc_rules t3-1",
+            "report_drc_rules c1-1",
+            "add_faults -all",
+            "create_patterns",
+            "simulate_patterns",
+            "report_statistics",
+        ]
+        print("//  Running Tessent Shell Demonstration Workflow...\n")
+        for cmd_str in commands:
+            print(f"tshell ({shell.fsm.system_mode.upper()})> {cmd_str}")
+            stop = shell.onecmd(cmd_str)
+            print()
+            if shell.failed:
+                return 1
+            if stop:
+                break
     return 0
 
 
@@ -532,12 +509,16 @@ def main() -> int:
         for sub_cmd in args.command.split(";"):
             sub_cmd = sub_cmd.strip()
             if sub_cmd:
-                shell.onecmd(sub_cmd)
+                stop = shell.onecmd(sub_cmd)
+                if shell.failed:
+                    return 1
+                if stop:
+                    break
         return 0
 
     if args.file:
-        shell.do_source(str(args.file))
-        return 0
+        shell.onecmd("source " + shlex.quote(str(args.file)))
+        return 1 if shell.failed else 0
 
     try:
         shell.cmdloop()

@@ -4,18 +4,13 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass, field
-from pathlib import Path
-from typing import Callable
 
 from tessent_core.logic4 import (
     Logic4,
     and4,
     mux21,
-    nand4,
-    nor4,
     not4,
     or4,
-    xnor4,
     xor4,
 )
 
@@ -34,7 +29,7 @@ class Gate:
     gate_type: str  # "AND", "OR", "XOR", "NOT", "BUF", "MUX", "DFF", "PRIMITIVE"
     inputs: dict[str, str] = field(default_factory=dict)  # pin_name -> net_name
     outputs: dict[str, str] = field(default_factory=dict)  # pin_name -> net_name
-    internal_state: Logic4 = Logic4.ZERO  # For DFF / sequential elements
+    internal_state: Logic4 = Logic4.X  # Verilog registers start unknown until initialized
     fault_forced_value: Logic4 | None = None  # Injected stuck-at fault
 
     def evaluate_output(self, in_values: dict[str, Logic4]) -> Logic4:
@@ -42,6 +37,8 @@ class Gate:
             return self.fault_forced_value
 
         gt = self.gate_type.upper()
+        if gt.startswith("CONST"):
+            return Logic4.from_val(gt[5:])
         if gt == "NOT" or gt == "INV":
             in_val = list(in_values.values())[0] if in_values else Logic4.X
             return not4(in_val)
@@ -77,6 +74,9 @@ class Gate:
             for v in vals[1:]:
                 res = or4(res, v)
             return not4(res)
+        if gt == "IFMUX":
+            # A Verilog procedural if takes its else branch for X/Z.
+            return in_values.get("d1", Logic4.X) if in_values.get("sel") == Logic4.ONE else in_values.get("d0", Logic4.X)
         if gt == "MUX":
             sel = in_values.get("sel", in_values.get("scan_en", Logic4.ZERO))
             d0 = in_values.get("d0", in_values.get("in0", in_values.get("d", Logic4.X)))
@@ -200,154 +200,267 @@ class CircuitGraph:
                         changed = True
 
     def clock_edge(self, clock_pin: str = "clk", active_edge: str = "pos") -> None:
-        """Synchronously evaluate and update memory elements on active clock edge (double-buffering)."""
-        # If the primary clock pin itself is forced (stuck-at), no dynamic clock transition occurs!
-        if clock_pin in self.forced_nets:
-            self.propagate_combinational()
-            return
+        """Pulse a clock and update flops only on a rising event at their clock pin.
 
-        # Step 1: Ensure combinational nets are settled prior to clock edge
+        This models the synchronous-reset, positive-edge subset emitted by
+        insertion.py. It does not model asynchronous events or gate delays.
+        """
+        if active_edge != "pos":
+            raise ValueError("only positive-edge clocks are supported")
+        self.propagate_combinational()
+        previous = {name: self.nets.get(g.inputs.get("clk", g.inputs.get("CLK", "clk")), Logic4.X)
+                    for name, g in self.gates.items() if g.gate_type.upper() == "DFF"}
+        if clock_pin not in self.forced_nets:
+            self.nets[clock_pin] = Logic4.ONE
         self.propagate_combinational()
 
-        # Step 2: Sample all DFF inputs synchronously at time t
         updates: dict[str, Logic4] = {}
         for gate in self.gates.values():
-            if gate.gate_type.upper() == "DFF":
-                gate_clk_net = gate.inputs.get("clk", gate.inputs.get("CLK", "clk"))
-                # If gate's clock net is forced stuck-at, it cannot toggle
-                if gate_clk_net in self.forced_nets:
-                    continue
+            if gate.gate_type.upper() != "DFF":
+                continue
+            clk_net = gate.inputs.get("clk", gate.inputs.get("CLK", "clk"))
+            clk_val = self.nets.get(clk_net, Logic4.X)
+            # Verilog includes X/Z -> 1 in positive-edge events; a stable 1
+            # is never an event, including a clock forced stuck at 1.
+            if previous[gate.name] == Logic4.ONE or clk_val != Logic4.ONE:
+                continue
+            d_net = gate.inputs.get("d", gate.inputs.get("D"))
+            d_val = self.nets.get(d_net, Logic4.X) if d_net else Logic4.X
+            reset_net = gate.inputs.get("reset", gate.inputs.get("R"))
+            reset_val = self.nets.get(reset_net, Logic4.X) if reset_net else Logic4.ZERO
+            updates[gate.name] = Logic4.ZERO if reset_val == Logic4.ONE else d_val
 
-                d_net = gate.inputs.get("d", gate.inputs.get("D", list(gate.inputs.values())[0] if gate.inputs else None))
-                d_val = self.nets.get(d_net, Logic4.X) if d_net else Logic4.X
-
-                reset_net = gate.inputs.get("reset", gate.inputs.get("R", None))
-                reset_val = self.nets.get(reset_net) if reset_net else Logic4.ZERO
-
-                if reset_val == Logic4.ONE:
-                    updates[gate.name] = Logic4.ZERO
-                else:
-                    updates[gate.name] = d_val
-
-        # Step 3: Concurrently latch states at time t+1
         for gate_name, new_val in updates.items():
             self.gates[gate_name].internal_state = new_val
-
-        # Step 4: Settle network post-latch
+        if clock_pin not in self.forced_nets:
+            self.nets[clock_pin] = Logic4.ZERO
         self.propagate_combinational()
+
+
+
+class _SubsetParser:
+    """Read a small, explicit scalar Verilog subset; reject everything else.
+
+    Supported: non-ANSI ports, scalar declarations, bitwise expressions,
+    built-in logic primitives, and the synchronous reset/scan always block
+    produced by insertion.py. This is not a general Verilog parser.
+    """
+
+    _token = re.compile(r"\s+|//[^\n]*|/\*[\s\S]*?\*/|1'[bB][01xXzZ]|[A-Za-z_][A-Za-z0-9_$]*|<=|[(),;@~&|^=]")
+    _ident = re.compile(r"[A-Za-z_][A-Za-z0-9_$]*\Z")
+    _ops = {'|': (1, 'OR'), '^': (2, 'XOR'), '&': (3, 'AND')}
+    _primitives = {'and', 'or', 'xor', 'nand', 'nor', 'not', 'buf'}
+
+    def __init__(self, source: str):
+        self.tokens: list[tuple[str, int]] = []
+        offset = 0
+        while offset < len(source):
+            match = self._token.match(source, offset)
+            if not match:
+                raise ValueError(f"unsupported Verilog token at line {source.count(chr(10), 0, offset) + 1}")
+            tok = match.group()
+            if not tok.isspace() and not tok.startswith(('//', '/*')):
+                self.tokens.append((tok, source.count('\n', 0, offset) + 1))
+            offset = match.end()
+        self.i = 0
+        self.declared: set[str] = set()
+        self.regs: set[str] = set()
+        self.inputs: set[str] = set()
+        self.outputs: set[str] = set()
+        self.driven: set[str] = set()
+        self.number = 0
+        self.constant_nets: dict[str, str] = {}
+
+    def peek(self) -> str:
+        return self.tokens[self.i][0] if self.i < len(self.tokens) else '<end>'
+
+    def fail(self, reason: str) -> None:
+        line = self.tokens[self.i][1] if self.i < len(self.tokens) else (self.tokens[-1][1] if self.tokens else 1)
+        raise ValueError(f"{reason} at line {line} (near {self.peek()!r})")
+
+    def take(self, value: str) -> None:
+        if self.peek() != value:
+            self.fail(f"expected {value!r}")
+        self.i += 1
+
+    def name(self) -> str:
+        name = self.peek()
+        if not self._ident.fullmatch(name) or name in {'input', 'output', 'wire', 'reg', 'module', 'endmodule', 'always', 'begin', 'end', 'if', 'else', 'assign', 'posedge'}:
+            self.fail('expected scalar identifier; unsupported construct')
+        self.i += 1
+        return name
+
+    def names(self) -> list[str]:
+        result = [self.name()]
+        while self.peek() == ',':
+            self.take(',')
+            result.append(self.name())
+        return result
+
+    def expression(self, priority: int = 0):
+        if self.peek() == '~':
+            self.take('~')
+            left = ('NOT', self.expression(4))
+        elif self.peek() == '(':
+            self.take('(')
+            left = self.expression()
+            self.take(')')
+        elif re.fullmatch(r"1'[bB][01xXzZ]", self.peek()):
+            left = ('literal', self.peek()[-1].upper())
+            self.i += 1
+        else:
+            left = ('net', self.name())
+        while self.peek() in self._ops and self._ops[self.peek()][0] >= priority:
+            prec, op = self._ops[self.peek()]
+            self.i += 1
+            left = (op, left, self.expression(prec + 1))
+        return left
+
+    def assignment_block(self) -> dict[str, tuple]:
+        compound = self.peek() == 'begin'
+        if compound:
+            self.take('begin')
+        result = {}
+        while True:
+            if compound and self.peek() == 'end':
+                break
+            target = self.name()
+            if target in result:
+                self.fail('duplicate register assignment')
+            self.take('<=')
+            result[target] = self.expression()
+            self.take(';')
+            if not compound:
+                break
+        if compound:
+            self.take('end')
+        return result
+
+    def temp(self, label: str) -> str:
+        while True:
+            self.number += 1
+            name = f'__tsim_{label}_{self.number}'
+            if name not in self.declared and name not in self.graph.gates:
+                return name
+
+    def expr_net(self, expr) -> str:
+        op = expr[0]
+        if op == 'net':
+            if expr[1] not in self.declared:
+                self.fail(f"undeclared signal {expr[1]!r}")
+            return expr[1]
+        if op == 'literal':
+            if expr[1] not in self.constant_nets:
+                name = self.temp('const')
+                self.graph.add_gate(Gate(name=name, gate_type=f'CONST{expr[1]}', outputs={'out': name}))
+                self.constant_nets[expr[1]] = name
+            return self.constant_nets[expr[1]]
+        ins = {'a': self.expr_net(expr[1])}
+        if len(expr) > 2:
+            ins['b'] = self.expr_net(expr[2])
+        name = self.temp('expr')
+        self.graph.add_gate(Gate(name=name, gate_type=op, inputs=ins, outputs={'out': name}))
+        return name
+
+    def drive(self, target: str) -> None:
+        if target not in self.declared:
+            self.fail(f"undeclared signal {target!r}")
+        if target in self.inputs or target in self.driven:
+            self.fail(f"input or multiply driven signal {target!r}")
+        self.driven.add(target)
+
+    def parse(self) -> CircuitGraph:
+        self.take('module')
+        module = self.name()
+        self.graph = CircuitGraph(module)
+        self.take('(')
+        ports = self.names() if self.peek() != ')' else []
+        self.take(')'); self.take(';')
+        if len(ports) != len(set(ports)):
+            self.fail('duplicate port')
+        while self.peek() in ('input', 'output', 'wire', 'reg'):
+            kind = self.peek(); self.i += 1
+            names = self.names(); self.take(';')
+            for name in names:
+                if name in self.declared:
+                    # Classic Verilog permits output q; reg q; for an output register.
+                    if kind == 'reg' and name in self.outputs and name not in self.regs:
+                        self.regs.add(name)
+                        continue
+                    self.fail(f"duplicate declaration {name!r}")
+                self.declared.add(name)
+                if kind == 'input':
+                    self.inputs.add(name); self.graph.add_port(name, 'in')
+                elif kind == 'output':
+                    self.outputs.add(name); self.graph.add_port(name, 'out')
+                elif kind == 'reg':
+                    self.regs.add(name); self.graph.nets[name] = Logic4.X
+                else:
+                    self.graph.nets[name] = Logic4.X
+        if set(ports) != self.inputs | self.outputs:
+            self.fail('module ports must exactly match scalar input/output declarations')
+        while self.peek() != 'endmodule':
+            if self.peek() == 'assign':
+                self.take('assign'); dest = self.name(); self.take('=')
+                expr = self.expression(); self.take(';')
+                self.drive(dest)
+                if dest in self.regs:
+                    self.fail('continuous assignment to a register is unsupported')
+                self.graph.add_gate(Gate(self.temp('assign'), 'BUF', {'in': self.expr_net(expr)}, {'out': dest}))
+            elif self.peek() in self._primitives:
+                kind = self.peek(); self.i += 1
+                name = self.name(); self.take('('); pins = self.names(); self.take(')'); self.take(';')
+                if len(pins) < 2 or (kind in ('not', 'buf') and len(pins) != 2) or (kind not in ('not', 'buf') and len(pins) < 3):
+                    self.fail('unsupported primitive pin count')
+                if name in self.graph.gates:
+                    self.fail('duplicate gate name')
+                for pin in pins:
+                    if pin not in self.declared:
+                        self.fail(f'undeclared signal {pin!r}')
+                self.drive(pins[0])
+                self.graph.add_gate(Gate(name, kind.upper(), {f'in{i}': net for i, net in enumerate(pins[1:])}, {'out': pins[0]}))
+            elif self.peek() == 'always':
+                self.take('always'); self.take('@'); self.take('('); self.take('posedge')
+                clk = self.name(); self.take(')'); self.take('begin')
+                if clk != 'clk' or clk not in self.inputs:
+                    self.fail("unsupported clock: only the primary input 'clk' is supported")
+                self.take('if'); self.take('('); reset = self.name(); self.take(')')
+                resets = self.assignment_block(); self.take('else')
+                scan_en = None
+                shifts = None
+                if self.peek() == 'if':
+                    self.take('if'); self.take('('); scan_en = self.name(); self.take(')')
+                    shifts = self.assignment_block(); self.take('else')
+                captures = self.assignment_block(); self.take('end')
+                if reset not in self.declared or (scan_en is not None and scan_en not in self.declared):
+                    self.fail('undeclared reset or scan enable')
+                if not resets or set(resets) != set(captures) or (shifts is not None and set(resets) != set(shifts)):
+                    self.fail('reset, shift and capture must assign the same registers')
+                if any(expr != ('literal', '0') for expr in resets.values()):
+                    self.fail('only synchronous active-high reset to zero is supported')
+                for dest in resets:
+                    if dest not in self.regs:
+                        self.fail(f"expected declared register {dest!r}")
+                    self.drive(dest)
+                    d_net = self.expr_net(captures[dest])
+                    if shifts is not None:
+                        d1 = self.expr_net(shifts[dest])
+                        mux_net = self.temp('scan_mux')
+                        self.graph.add_gate(Gate(mux_net, 'IFMUX', {'sel': scan_en, 'd0': d_net, 'd1': d1}, {'out': mux_net}))
+                        d_net = mux_net
+                    if f'dff_{dest}' in self.graph.gates:
+                        self.fail(f'duplicate gate name dff_{dest!s}')
+                    self.graph.add_gate(Gate(f'dff_{dest}', 'DFF', {'clk': clk, 'reset': reset, 'd': d_net}, {'Q': dest}))
+                    if shifts is None:
+                        self.graph.scan_cells.remove(f'dff_{dest}')
+            else:
+                self.fail('unsupported Verilog statement')
+        self.take('endmodule')
+        if self.peek() != '<end>':
+            self.fail('unsupported content after endmodule')
+        return self.graph
 
 
 def parse_verilog_netlist(text: str) -> CircuitGraph:
-    """Parse structural Verilog netlist into CircuitGraph."""
-    mod_match = re.search(r"\bmodule\s+([A-Za-z0-9_]+)\s*\((.*?)\);", text, re.DOTALL)
-    mod_name = mod_match.group(1) if mod_match else "top"
-    graph = CircuitGraph(name=mod_name)
-
-    # Ports
-    in_matches = re.findall(r"\binput\s+([^;]+);", text)
-    for m in in_matches:
-        for port in m.split(","):
-            port = port.strip()
-            if port:
-                graph.add_port(port, "in")
-
-    out_matches = re.findall(r"\boutput\s+([^;]+);", text)
-    for m in out_matches:
-        for port in m.split(","):
-            port = port.strip()
-            if port:
-                graph.add_port(port, "out")
-
-    # Flip-flops from reg or assign
-    reg_matches = re.findall(r"\breg\s+([^;]+);", text)
-    reg_names = []
-    for m in reg_matches:
-        for r in m.split(","):
-            r = r.strip()
-            if r:
-                reg_names.append(r)
-
-    # Continuous assignments: assign <net> = <expr>;
-    assign_matches = re.findall(r"\bassign\s+([A-Za-z0-9_]+)\s*=\s*([^;]+);", text)
-    for target, expr in assign_matches:
-        target = target.strip()
-        expr = expr.strip()
-        # Simple signal alias
-        clean_expr = expr.strip().strip("()")
-        if re.fullmatch(r"[A-Za-z0-9_]+", clean_expr):
-            graph.add_gate(Gate(name=f"buf_{target}", gate_type="BUF", inputs={"in": clean_expr}, outputs={"out": target}))
-        elif "^" in expr:
-            parts = [p.strip().strip("()") for p in expr.split("^")]
-            graph.add_gate(Gate(name=f"xor_{target}", gate_type="XOR", inputs={"a": parts[0], "b": parts[1]}, outputs={"out": target}))
-        elif "&" in expr:
-            parts = [p.strip().strip("()") for p in expr.split("&")]
-            graph.add_gate(Gate(name=f"and_{target}", gate_type="AND", inputs={"a": parts[0], "b": parts[1]}, outputs={"out": target}))
-        elif "|" in expr:
-            parts = [p.strip().strip("()") for p in expr.split("|")]
-            graph.add_gate(Gate(name=f"or_{target}", gate_type="OR", inputs={"a": parts[0], "b": parts[1]}, outputs={"out": target}))
-
-    # Extract flip-flop capture and shift sources from always blocks
-    shift_sources: dict[str, str] = {}
-    func_sources: dict[str, str] = {}
-
-    scan_en_match = re.search(r"if\s*\(\s*scan_en\s*\)\s*begin(.*?)end\s*else\s*begin(.*?)end", text, re.DOTALL)
-    if scan_en_match:
-        shift_part = scan_en_match.group(1)
-        func_part = scan_en_match.group(2)
-        for m in re.finditer(r"([A-Za-z0-9_]+)\s*<=\s*([^;]+);", shift_part):
-            shift_sources[m.group(1).strip()] = m.group(2).strip().strip("()")
-        for m in re.finditer(r"([A-Za-z0-9_]+)\s*<=\s*([^;]+);", func_part):
-            func_sources[m.group(1).strip()] = m.group(2).strip()
-    else:
-        for m in re.finditer(r"([A-Za-z0-9_]+)\s*<=\s*([^;]+);", text):
-            target = m.group(1).strip()
-            expr = m.group(2).strip()
-            if not expr.startswith("1'b0"):
-                func_sources[target] = expr
-
-    # Construct flip-flops with scan multiplexers
-    if reg_names:
-        has_scan = "scan_en" in graph.primary_inputs or "scan_in" in graph.primary_inputs
-        for i, r in enumerate(reg_names):
-            # Functional capture logic for r
-            d_func = func_sources.get(r, "").strip()
-            clean_func = d_func.strip("()")
-            d_func_net = f"dfunc_{r}"
-            if not d_func:
-                d_func_net = "scan_in" if i == 0 else reg_names[i - 1]
-            elif re.fullmatch(r"[A-Za-z0-9_]+", clean_func):
-                d_func_net = clean_func
-            elif "^" in d_func:
-                parts = [p.strip().strip("()") for p in d_func.split("^")]
-                graph.add_gate(Gate(name=f"xor_dfunc_{r}", gate_type="XOR", inputs={"a": parts[0], "b": parts[1]}, outputs={"out": d_func_net}))
-            elif "&" in d_func:
-                parts = [p.strip().strip("()") for p in d_func.split("&")]
-                graph.add_gate(Gate(name=f"and_dfunc_{r}", gate_type="AND", inputs={"a": parts[0], "b": parts[1]}, outputs={"out": d_func_net}))
-            elif "|" in d_func:
-                parts = [p.strip().strip("()") for p in d_func.split("|")]
-                graph.add_gate(Gate(name=f"or_dfunc_{r}", gate_type="OR", inputs={"a": parts[0], "b": parts[1]}, outputs={"out": d_func_net}))
-            else:
-                d_func_net = clean_func
-
-            # If scan chain is enabled, insert Scan MUX (sel=scan_en, in0=capture, in1=shift)
-            if has_scan:
-                d_shift = shift_sources.get(r, "scan_in" if i == 0 else reg_names[i - 1])
-                mux_out = f"dmux_{r}"
-                graph.add_gate(Gate(
-                    name=f"scan_mux_{r}",
-                    gate_type="MUX",
-                    inputs={"sel": "scan_en", "in0": d_func_net, "in1": d_shift},
-                    outputs={"out": mux_out},
-                ))
-                d_target = mux_out
-            else:
-                d_target = d_func_net
-
-            graph.add_gate(Gate(
-                name=f"dff_{r}",
-                gate_type="DFF",
-                inputs={"clk": "clk", "reset": "reset", "d": d_target},
-                outputs={"Q": r},
-            ))
-
-    return graph
+    """Parse a documented scalar Verilog subset; reject unsupported syntax."""
+    return _SubsetParser(text).parse()

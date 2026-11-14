@@ -167,7 +167,7 @@ class ATPGEngine:
         test_patterns: list[dict[str, Any]] | None = None,
     ) -> ATPGStatistics:
         """Run true differential fault simulation over test patterns and compute formal coverage."""
-        patterns = test_patterns or self.patterns or self.create_patterns(circuit)
+        patterns = test_patterns if test_patterns is not None else (self.patterns or self.create_patterns(circuit))
 
         # Reset all faults to ND
         for f in self.faults.values():

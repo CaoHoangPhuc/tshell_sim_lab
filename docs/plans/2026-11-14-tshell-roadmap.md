@@ -200,6 +200,8 @@ flowchart TD
 
 ## C. Cập nhật giải quyết 6 điểm Review trọng yếu (Post-31c046c Review Resolution)
 
+**Ghi chú sau khi hợp nhất:** Phần dưới ghi lại trạng thái tại thời điểm commit trước. Bản hiện tại từ chối `write_tsdb_data` vì chưa có TSDB/STIL hoàn chỉnh, chỉ giữ metadata trong knowledge DB và đọc trực tiếp PDF do người dùng cung cấp; không dùng `--include-page-text`. Parser và DRC vẫn có phạm vi giới hạn như mô tả trong README, chưa coi là hoàn thiện hoặc được xác thực.
+
 Dựa trên kết quả review chi tiết sau commit `31c046c`, các vấn đề sau đã được xác nhận và khắc phục triệt để:
 
 1. **Bảo vệ dữ liệu TSDB khỏi ghi đè (`write_tsdb_data`)**:

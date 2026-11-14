@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
+import re
 import shlex
 import shutil
 import subprocess
@@ -24,13 +26,13 @@ except Exception:
     DB = {}
 CASE_STUDIES = DB.get('case_studies', {})
 
-# Markers identify the excerpts in the knowledge base.
+# Page numbers identify case studies; the actual manual is supplied separately.
 BOOK_CASES = {
-    'case01': (4522, 4522, 4524, '//  Error: Scan chain chain1 blocked at gate /reg2/df2', '(T3-1)'),
-    'case02': (4525, 4525, 4528, '//  Error: Clock inputs of /datao/reg_q_0_', '(T4-1)'),
-    'case03': (4529, 4529, 4531, '//  Error: clock input of /datao/reg_q_0_', '(T3-1)'),
-    'case04': (3812, 3809, 3814, '// Error: Clock PIs off failed to force off a clock line of /U$1/DFF1', '(C1-1)'),
-    'case05': (3865, 3863, 3866, '//  ERROR: /dataot/reg_q_0_ (373) disturbed during time 0 of grp1', '(D1-1)'),
+    'case01': (4522, 4522, 4524, 'T3-1'),
+    'case02': (4525, 4525, 4528, 'T4-1'),
+    'case03': (4529, 4529, 4531, 'T5-1'),
+    'case04': (3812, 3809, 3814, 'C1-1'),
+    'case05': (3865, 3863, 3866, 'D1-1'),
 }
 
 # Independent teaching implementations of the conditions documented in the
@@ -76,63 +78,68 @@ def init(case: str, directory: Path) -> int:
     return 0
 
 
-def book_page(number: int, case: str | None = None) -> str:
-    if not DB:
-        raise ValueError('Không tìm thấy cơ sở dữ liệu tri thức (knowledge_db.json).')
-    if case and case in CASE_STUDIES:
-        texts = CASE_STUDIES[case].get('page_texts', {})
-        if str(number) in texts:
-            return texts[str(number)]
-    for cdata in CASE_STUDIES.values():
-        texts = cdata.get('page_texts', {})
-        if str(number) in texts:
-            return texts[str(number)]
-    raise ValueError(f'Trang PDF {number} không tồn tại trong cơ sở dữ liệu tri thức.')
+def book_page(number: int, case: str | None = None, pdf_path: Path | None = None) -> str:
+    """Read one page from an explicitly supplied reference PDF, never from the package."""
+    selected = pdf_path or (Path(os.environ['TSHELL_REFERENCE_PDF']) if os.environ.get('TSHELL_REFERENCE_PDF') else None)
+    if selected is None:
+        raise ValueError('Cần cung cấp manual bằng --pdf hoặc biến TSHELL_REFERENCE_PDF.')
+    if not selected.is_file():
+        raise ValueError(f'Không tìm thấy PDF: {selected}')
+    try:
+        import pymupdf
+    except ImportError as exc:
+        raise ValueError('Cần cài PyMuPDF để đọc PDF: pip install pymupdf') from exc
+    try:
+        with pymupdf.open(selected) as pdf:
+            if number < 1 or number > len(pdf):
+                raise ValueError(f'Trang PDF {number} không tồn tại trong tài liệu.')
+            return pdf[number - 1].get_text()
+    except (OSError, RuntimeError) as exc:
+        raise ValueError(f'Không thể đọc PDF: {exc}') from exc
 
 
-def replay(case: str) -> int:
-    case_data = CASE_STUDIES.get(case)
-    if not case_data or not case_data.get('excerpt'):
-        print(f'Không tìm thấy đoạn lỗi gốc cho {case}; kiểm tra cơ sở dữ liệu tri thức.', file=sys.stderr)
+def replay(case: str, pdf_path: Path | None = None) -> int:
+    try:
+        case_data = CASE_STUDIES[case]
+        number = case_data['strobe_page']
+        rule = case_data['rule']
+        page = book_page(number, case, pdf_path)
+        # A bounded window around the occurrence is printed from the user's
+        # document; it is never written to the distributable index.
+        lines = page.splitlines()
+        start = end = None
+        for i, line in enumerate(lines):
+            if f'({rule}-1)' not in line:
+                continue
+            found = next((j for j in range(i, max(-1, i - 8), -1)
+                          if re.match(r'\s*//\s*(error|warning)', lines[j], re.IGNORECASE)), None)
+            if found is not None:
+                start, end = found, i
+                break
+        if start is None or end is None:
+            raise ValueError(f'Không tìm thấy ví dụ {rule}-1 trong trang {number}.')
+        excerpt = '\n'.join(lines[start:end + 1])
+    except (KeyError, ValueError) as exc:
+        print(f'Không thể đọc ví dụ: {exc}', file=sys.stderr)
         return 2
-    number = case_data.get('strobe_page', case_data.get('pdf_pages', [None])[0])
-    excerpt = case_data['excerpt']
     print(f'Trích trực tiếp từ PDF trang {number} (phát lại; không chạy Tessent DRC):')
     print(excerpt)
     print('Đây là log trong sách, không đánh giá bài làm hay thực thi lại thiết kế.')
     return 0
 
 
-def source(directory: Path, page: int) -> int:
+def source(directory: Path, page: int, pdf_path: Path | None = None) -> int:
     try:
         meta = json.loads((directory / 'case.json').read_text(encoding='utf-8'))
         if not isinstance(meta, dict) or meta.get('format') != FORMAT or meta.get('case') not in BOOK_CASES:
             raise ValueError('Bài này không phải bài đọc nguồn từ sách.')
         case = meta['case']
-        case_data = CASE_STUDIES.get(case)
-        if not case_data:
-            raise ValueError(f'Không tìm thấy dữ liệu bài {case} trong cơ sở tri thức.')
-        first = case_data.get('first_page', case_data.get('pdf_pages', [0])[0])
-        last = case_data.get('last_page', case_data.get('pdf_pages', [0])[-1])
+        case_data = CASE_STUDIES[case]
+        first, last = case_data['first_page'], case_data['last_page']
         if page < first or page > last:
             raise ValueError(f'Bài này có trang nguồn từ {first} đến {last}.')
-        original = case_data.get('page_texts', {}).get(str(page))
-        if original is None:
-            page_cmds = case_data.get('commands', {}).get(str(page), [])
-            if page_cmds:
-                original = (
-                    f"--- Lệnh tham chiếu từ trang {page} (Zero-Asset Clean-Room) ---\n"
-                    + "\n".join(page_cmds) + "\n\n"
-                    + "// Ghi chú: Toàn văn trang sách không lưu sẵn trong repo để tuân thủ Zero-Asset Policy và LEGAL.md.\n"
-                    + "// Để nạp toàn văn trang sách, chạy: python3 tools/build_knowledge_db.py --pdf <tshell_ref.pdf>\n"
-                )
-            else:
-                original = (
-                    f"--- Trang {page} (Zero-Asset Clean-Room) ---\n"
-                    + "// Toàn văn trang sách không lưu sẵn trong repo để tuân thủ Zero-Asset Policy và LEGAL.md.\n"
-                    + "// Để nạp toàn văn trang sách, chạy: python3 tools/build_knowledge_db.py --pdf <tshell_ref.pdf>\n"
-                )
-    except (OSError, ValueError, json.JSONDecodeError) as exc:
+        original = book_page(page, case, pdf_path)
+    except (KeyError, OSError, ValueError, json.JSONDecodeError) as exc:
         print(f'Không thể đọc trang nguồn: {exc}', file=sys.stderr)
         return 2
     print(f'Trích trực tiếp từ PDF trang {page}; không phải output của Tessent đang chạy:')
@@ -140,18 +147,28 @@ def source(directory: Path, page: int) -> int:
     return 0
 
 
-def commands(directory: Path) -> int:
-    """Print the non-Visualizer T3 walkthrough's command lines from the knowledge DB."""
+def commands(directory: Path, pdf_path: Path | None = None) -> int:
+    """Extract the T3 walkthrough from a user-supplied manual at runtime."""
     try:
         meta = json.loads((directory / 'case.json').read_text(encoding='utf-8'))
         if not isinstance(meta, dict) or meta.get('format') != FORMAT or meta.get('case') not in BOOK_CASES:
             raise ValueError('Bài này không phải bài đọc nguồn từ sách.')
         case = meta['case']
-        case_data = CASE_STUDIES.get(case)
-        if not case_data or not case_data.get('commands'):
+        if case != 'case01':
             raise ValueError('Chưa hỗ trợ trích lệnh cho case này.')
-        page_commands = case_data['commands']
-    except (OSError, ValueError, json.JSONDecodeError) as exc:
+        page_commands = {}
+        prefixes = ('set_trace_report ', 'set_gate_level ', 'set_gate_report ',
+                    'set_system_mode ', 'report_gate ', 'report_gates ')
+        for number in CASE_STUDIES[case]['pdf_pages']:
+            text = book_page(number, case, pdf_path)
+            if number == CASE_STUDIES[case]['first_page']:
+                marker = 'How to Debug T3 Violations Without Tessent Visualizer'
+                if marker not in text:
+                    raise ValueError(f'Không tìm thấy phần hướng dẫn trong trang {number}.')
+                text = text.split(marker, 1)[1]
+            page_commands[number] = [line.strip() for line in text.splitlines()
+                                     if line.strip().startswith(prefixes)]
+    except (KeyError, OSError, ValueError, json.JSONDecodeError) as exc:
         print(f'Không thể đọc lệnh gốc: {exc}', file=sys.stderr)
         return 2
     print('Lệnh Tessent trích từ PDF để tham khảo; không thực thi Tessent:')
@@ -162,7 +179,7 @@ def commands(directory: Path) -> int:
     return 0
 
 
-def run(directory: Path) -> int:
+def run(directory: Path, pdf_path: Path | None = None) -> int:
     design = directory / 'design.v'
     manifest_path = directory / 'case.json'
     procedure = directory / 'procedure.vh'
@@ -172,7 +189,7 @@ def run(directory: Path) -> int:
             if not isinstance(meta, dict) or meta.get('format') not in (FORMAT, LEGACY_FORMAT) or meta.get('case') not in CASES:
                 raise ValueError('định dạng hoặc mã bài không hợp lệ')
             if meta['format'] == FORMAT:
-                return replay(meta['case'])
+                return replay(meta['case'], pdf_path)
             testbench = DOCUMENT_TESTBENCH
             sources = [design, procedure, testbench]
             mode = 'document'
@@ -237,11 +254,14 @@ def main() -> int:
     create.add_argument('--dir', required=True, type=Path)
     simulate = sub.add_parser('run', help='phát lại trích đoạn hoặc chạy bài mô phỏng cũ')
     simulate.add_argument('--dir', required=True, type=Path)
+    simulate.add_argument('--pdf', type=Path, help='PDF manual cá nhân (hoặc TSHELL_REFERENCE_PDF)')
     read = sub.add_parser('source', help='đọc trang PDF nguồn của bài từ tài liệu gốc')
     read.add_argument('--dir', required=True, type=Path)
     read.add_argument('--page', required=True, type=int)
+    read.add_argument('--pdf', type=Path, help='PDF manual cá nhân (hoặc TSHELL_REFERENCE_PDF)')
     cmd = sub.add_parser('commands', help='xem các lệnh Tessent trích từ ví dụ T3 trong sách')
     cmd.add_argument('--dir', required=True, type=Path)
+    cmd.add_argument('--pdf', type=Path, help='PDF manual cá nhân (hoặc TSHELL_REFERENCE_PDF)')
     args = parser.parse_args()
     if args.command == 'list':
         print('\n'.join(CASES))
@@ -249,10 +269,10 @@ def main() -> int:
     if args.command == 'init':
         return init(args.case, args.dir)
     if args.command == 'source':
-        return source(args.dir, args.page)
+        return source(args.dir, args.page, args.pdf)
     if args.command == 'commands':
-        return commands(args.dir)
-    return run(args.dir)
+        return commands(args.dir, args.pdf)
+    return run(args.dir, args.pdf)
 
 
 if __name__ == '__main__':

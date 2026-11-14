@@ -48,11 +48,10 @@ class SessionFSM:
     def set_context(self, context_str: str) -> tuple[bool, str]:
         c = context_str.strip().lower()
         for vc in self.VALID_CONTEXTS:
-            if c == vc or c.startswith(vc) or vc.startswith(c):
+            if c == vc:
                 self.context = vc
                 return True, f"//  Context set to: {self.context}"
-        self.context = context_str.strip()
-        return True, f"//  Context set to: {self.context}"
+        return False, f"//  Error: Invalid context '{context_str}'."
 
     def set_system_mode(self, mode: str) -> tuple[bool, str]:
         m = mode.strip().lower()
@@ -60,12 +59,14 @@ class SessionFSM:
             return False, f"//  Error: Invalid system mode '{mode}'. Supported: setup, analysis."
 
         if m == "analysis" and self.system_mode == "setup":
-            # Run DRC checks upon transition to analysis
+            if not self.raw_verilog_text:
+                return False, "//  Error: No design loaded for analysis."
+            # Preliminary checks do not constitute a complete DRC.
             violations = self.run_drc()
             self.system_mode = "analysis"
             drc_summary = (
                 f"//  Transitioning to analysis mode...\n"
-                f"//  DRC analysis completed with {len(violations)} violation(s).\n"
+                f"//  Preliminary DRC found {len(violations)} possible violation(s); checks are incomplete.\n"
                 f"//  System mode is now: {self.system_mode}"
             )
             return True, drc_summary
