@@ -74,7 +74,12 @@ def init(case: str, directory: Path) -> int:
         print(f'Không thể tạo thư mục bài (không ghi đè): {exc}', file=sys.stderr)
         return 2
     print(f'Đã tạo bài {case}: {directory / "analysis.txt"}')
-    print(f'Xem trích đoạn: python3 exercises.py run --dir {shlex.quote(str(directory))}')
+    cmd_prefix = f'python3 {Path(sys.argv[0]).name}' if sys.argv[0].endswith('.py') else 'tshell-exercises'
+    if os.environ.get('TSHELL_REFERENCE_PDF'):
+        print(f'Xem trích đoạn: {cmd_prefix} run --dir {shlex.quote(str(directory))}')
+    else:
+        print(f'Xem trích đoạn: {cmd_prefix} run --dir {shlex.quote(str(directory))} --pdf /path/to/reference.pdf')
+        print('                (hoặc thiết lập: export TSHELL_REFERENCE_PDF=/path/to/reference.pdf)')
     return 0
 
 
