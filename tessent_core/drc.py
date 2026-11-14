@@ -147,13 +147,6 @@ class DRCEngine:
         # 3. Rule T3, T4, T5: Scan Chain Tracing in Shift Mode
         # -----------------------------------------------------------------
         chains = scan_chains
-        if not chains and circuit.scan_cells:
-            chains = [{
-                "name": "chain1",
-                "scan_in": "scan_in" if "scan_in" in circuit.primary_inputs else list(circuit.primary_inputs)[0],
-                "scan_out": "scan_out" if "scan_out" in circuit.primary_outputs else list(circuit.primary_outputs)[0],
-                "cells": list(circuit.scan_cells),
-            }]
 
         shift_c = circuit.clone()
         if "scan_en" in shift_c.primary_inputs:

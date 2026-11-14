@@ -79,6 +79,6 @@ def mux21(sel: Logic4, d0: Logic4, d1: Logic4) -> Logic4:
     if sel == Logic4.ONE:
         return d1
     # If sel is X, but both data inputs are identical, output is determined!
-    if d0 == d1 and d0 in (Logic4.ZERO, Logic4.ONE):
+    if d0 == d1:
         return d0
     return Logic4.X

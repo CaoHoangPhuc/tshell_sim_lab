@@ -44,64 +44,74 @@ class ExerciseTests(unittest.TestCase):
             self.assertNotEqual(proc.returncode, 0)
             self.assertEqual((first / 'analysis.txt').read_text(), 'user changes')
 
-    def test_run_replays_actual_manual_excerpt_without_modifying_analysis(self):
-        db_path = LAB / 'tessent_core' / 'knowledge_db.json'
-        self.assertTrue(db_path.is_file(), "knowledge_db.json must exist")
-        db = json.loads(db_path.read_text(encoding='utf-8'))
-        with tempfile.TemporaryDirectory() as tmp:
-            for case in ('case01', 'case02', 'case03', 'case04', 'case05'):
-                directory = Path(tmp) / case
-                self.assertEqual(cli('init', case, '--dir', directory).returncode, 0)
-                analysis = directory / 'analysis.txt'
-                analysis.write_text('my analysis')
-                result = cli('run', '--dir', directory)
-                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-                expected_excerpt = db['case_studies'][case]['excerpt']
-                self.assertIn(expected_excerpt, result.stdout)
-                self.assertEqual(analysis.read_text(), 'my analysis')
+    def test_distribution_contains_metadata_not_manual_text(self):
+        db = json.loads((LAB / 'tessent_core' / 'knowledge_db.json').read_text())
+        self.assertEqual(len(db['case_studies']), 5)
+        for case in db['case_studies'].values():
+            self.assertNotIn('page_texts', case)
+            self.assertNotIn('excerpt', case)
+            self.assertNotIn('commands', case)
+        for rule in db['rules'].values():
+            self.assertNotIn('summary', rule)
+            self.assertNotIn('reference_excerpt', rule)
 
-    def test_replay_reports_missing_db_and_missing_excerpt(self):
+    def test_manual_requires_explicit_pdf_and_does_not_modify_analysis(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            directory = Path(tmp) / 'book'
+            self.assertEqual(cli('init', 'case01', '--dir', directory).returncode, 0)
+            analysis = directory / 'analysis.txt'
+            analysis.write_text('my analysis')
+            env = dict(os.environ)
+            env.pop('TSHELL_REFERENCE_PDF', None)
+            result = subprocess.run([sys.executable, str(SCRIPT), 'run', '--dir', str(directory)],
+                                    cwd=LAB, capture_output=True, text=True, env=env)
+            self.assertEqual(result.returncode, 2)
+            self.assertIn('--pdf', result.stderr)
+            self.assertEqual(analysis.read_text(), 'my analysis')
+
+    def test_source_reads_user_supplied_pdf_and_checks_page_range(self):
+        try:
+            import pymupdf
+        except ImportError:
+            self.skipTest('PyMuPDF not installed')
         sys.path.insert(0, str(LAB))
         import exercises
-        with patch.object(exercises, 'CASE_STUDIES', {}):
-            stderr = StringIO()
-            with redirect_stderr(stderr):
-                self.assertEqual(exercises.replay('case01'), 2)
-            self.assertIn('Không tìm thấy đoạn lỗi gốc', stderr.getvalue())
-        with patch.object(exercises, 'CASE_STUDIES', {'case01': {'excerpt': ''}}):
-            stderr = StringIO()
-            with redirect_stderr(stderr):
-                self.assertEqual(exercises.replay('case01'), 2)
-            self.assertIn('Không tìm thấy đoạn lỗi gốc', stderr.getvalue())
-
-    def test_source_accepts_only_case_pages_and_reads_actual_page(self):
         with tempfile.TemporaryDirectory() as tmp:
             directory = Path(tmp) / 'book'
-            self.assertEqual(cli('init', 'case01', '--dir', directory).returncode, 0)
-            result = cli('source', '--dir', directory, '--page', 4523)
-            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-            self.assertIn('report_gate /reg2/df2', result.stdout)
-            self.assertNotEqual(cli('source', '--dir', directory, '--page', 4529).returncode, 0)
+            directory.mkdir()
+            (directory / 'case.json').write_text(json.dumps({'format': exercises.FORMAT, 'case': 'case01'}))
+            pdf = Path(tmp) / 'own.pdf'
+            document = pymupdf.open()
+            page = document.new_page()
+            page.insert_text((72, 72), 'sample page supplied by the user')
+            document.save(pdf)
+            document.close()
+            case = dict(exercises.CASE_STUDIES['case01'], first_page=1, last_page=1, pdf_pages=[1])
+            with patch.dict(exercises.CASE_STUDIES, {'case01': case}), patch('sys.stdout', new_callable=StringIO) as out:
+                self.assertEqual(exercises.source(directory, 1, pdf), 0)
+                self.assertIn('sample page supplied by the user', out.getvalue())
+                self.assertEqual(exercises.source(directory, 2, pdf), 2)
 
-    def test_commands_follow_t3_example_as_printed_in_manual(self):
+    def test_replay_selects_actual_occurrence_after_generic_description(self):
+        sys.path.insert(0, str(LAB))
+        import exercises
+        page = 'generic description (T4-1)\n// Error: actual failure\n// continuation (T4-1)\n'
+        with patch.object(exercises, 'book_page', return_value=page), patch('sys.stdout', new_callable=StringIO) as out:
+            self.assertEqual(exercises.replay('case02'), 0)
+            self.assertIn('actual failure', out.getvalue())
+            self.assertNotIn('generic description', out.getvalue())
+
+    def test_rebuild_metadata_never_embeds_manual(self):
         with tempfile.TemporaryDirectory() as tmp:
-            directory = Path(tmp) / 'book'
-            self.assertEqual(cli('init', 'case01', '--dir', directory).returncode, 0)
-            result = cli('commands', '--dir', directory)
-            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-            lines = result.stdout.splitlines()
-            commands = [line for line in lines if line.startswith(('set_', 'report_gate'))]
-            self.assertEqual(commands, [
-                'set_trace_report on', 'set_gate_level primitive', 'set_gate_report trace',
-                'set_system_mode analysis', 'report_gate /reg2/df2', 'set_gate_level design',
-                'report_gate /reg2/df2', 'report_gates /uu1', 'report_gates /ten_reg',
-            ])
-            self.assertIn('4522', result.stdout)
-            self.assertIn('4523', result.stdout)
-            self.assertIn('4524', result.stdout)
-            self.assertIn('không thực thi', result.stdout.lower())
+            output = Path(tmp) / 'index.json'
+            proc = subprocess.run([sys.executable, str(LAB / 'tools' / 'build_knowledge_db.py'),
+                                   '--output', str(output)], capture_output=True, text=True)
+            self.assertEqual(proc.returncode, 0, proc.stderr)
+            generated = json.loads(output.read_text())
+            self.assertNotIn('page_texts', generated['case_studies']['case01'])
+            self.assertNotIn('reference_excerpt', generated['rules']['C1'])
 
-    def test_commands_unsupported_case_and_invalid_manifest(self):
+    def test_commands_require_manual_and_reject_unsupported_case(self):
         with tempfile.TemporaryDirectory() as tmp:
             directory = Path(tmp) / 'book'
             self.assertEqual(cli('init', 'case02', '--dir', directory).returncode, 0)

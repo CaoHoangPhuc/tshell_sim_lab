@@ -23,7 +23,8 @@ class TessentShellTests(unittest.TestCase):
         self.assertEqual(proc.returncode, 0, proc.stderr)
         self.assertIn("Tessent Shell Demonstration Workflow", proc.stdout)
         self.assertIn("Test Coverage:", proc.stdout)
-        self.assertIn("DRC Rule Excerpt", proc.stdout)
+        self.assertIn("DRC", proc.stdout)
+        self.assertNotIn("//  Error:", proc.stdout)
 
     def test_command_line_one_liner(self):
         cmd = "set_context dft -scan; report_context; add_clocks clk -off_state 0; report_clocks"
@@ -38,7 +39,7 @@ class TessentShellTests(unittest.TestCase):
             dofile.write_text(
                 "// Test Dofile\n"
                 "set_context patterns -scan\n"
-                "read_verilog output/serial_adder_scan.v\n"
+                "read_verilog examples/serial_adder_scan.v\n"
                 "report_design\n"
                 "set_system_mode analysis\n"
                 "report_drc_rules\n",
@@ -59,7 +60,7 @@ class TessentShellTests(unittest.TestCase):
 
     def test_atpg_pattern_generation_and_reporting(self):
         cmd = (
-            "read_verilog output/serial_adder_scan.v; "
+            "read_verilog examples/serial_adder_scan.v; "
             "add_clocks 0 clk; "
             "set_system_mode analysis; "
             "add_faults -all; "
@@ -70,13 +71,13 @@ class TessentShellTests(unittest.TestCase):
         )
         proc = run_tshell("-c", cmd)
         self.assertEqual(proc.returncode, 0, proc.stderr)
-        self.assertIn("ATPG pattern generation completed: 6 test patterns created", proc.stdout)
+        self.assertIn("Generated 6 heuristic demonstration patterns", proc.stdout)
         self.assertIn("Pattern #0", proc.stdout)
         self.assertIn("test coverage:", proc.stdout.lower())
 
     def test_positional_clock_and_hierarchical_gate_reporting(self):
         cmd = (
-            "read_verilog output/serial_adder_scan.v; "
+            "read_verilog examples/serial_adder_scan.v; "
             "add_clocks 0 clk; "
             "report_clocks; "
             "report_gate /serial_adder_scan/dff_q0"
