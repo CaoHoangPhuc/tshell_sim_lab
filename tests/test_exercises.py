@@ -44,6 +44,24 @@ class ExerciseTests(unittest.TestCase):
             self.assertNotEqual(proc.returncode, 0)
             self.assertEqual((first / 'analysis.txt').read_text(), 'user changes')
 
+    def test_init_hint_includes_pdf_guidance(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            target = Path(tmp) / 'hint_check'
+            env_without_pdf = {k: v for k, v in os.environ.items() if k != 'TSHELL_REFERENCE_PDF'}
+            proc = subprocess.run([sys.executable, str(SCRIPT), 'init', 'case01', '--dir', str(target)],
+                                  cwd=LAB, capture_output=True, text=True, env=env_without_pdf)
+            self.assertEqual(proc.returncode, 0, proc.stderr)
+            self.assertIn('--pdf', proc.stdout)
+            self.assertIn('TSHELL_REFERENCE_PDF', proc.stdout)
+
+            target_with_env = Path(tmp) / 'hint_check_env'
+            env_with_pdf = dict(env_without_pdf, TSHELL_REFERENCE_PDF='/path/to/manual.pdf')
+            proc_env = subprocess.run([sys.executable, str(SCRIPT), 'init', 'case01', '--dir', str(target_with_env)],
+                                      cwd=LAB, capture_output=True, text=True, env=env_with_pdf)
+            self.assertEqual(proc_env.returncode, 0, proc_env.stderr)
+            self.assertIn('run --dir', proc_env.stdout)
+            self.assertNotIn('--pdf', proc_env.stdout)
+
     def test_distribution_contains_metadata_not_manual_text(self):
         db = json.loads((LAB / 'tessent_core' / 'knowledge_db.json').read_text())
         self.assertEqual(len(db['case_studies']), 5)
