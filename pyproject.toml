@@ -22,14 +22,13 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Electronic Design Automation (EDA)",
     "Operating System :: OS Independent",
 ]
-dependencies = [
-    "pymupdf>=1.23.0",
-]
+dependencies = []
 
 [project.optional-dependencies]
 dev = [
     "pytest>=7.0.0",
     "pytest-cov>=4.0.0",
+    "pymupdf>=1.23.0",
 ]
 
 [project.scripts]

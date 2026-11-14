@@ -16,10 +16,15 @@ LEGACY_TESTBENCH = LAB / 'rtl' / 'tb_exercise.v'
 DOCUMENT_TESTBENCH = LAB / 'rtl' / 'tb_document_cases.v'
 LEGACY_FORMAT = 'document-shift-v1'
 FORMAT = 'book-replay-v1'
-REFERENCE = (LAB / 'tshell_ref.pdf') if (LAB / 'tshell_ref.pdf').is_file() else (LAB.parent / 'tshell_ref.pdf')
 
-# Markers identify the excerpts already present in the user's PDF. They are
-# locators, not manufactured Tessent output; line breaks remain untouched.
+DB_PATH = LAB / 'tessent_core' / 'knowledge_db.json'
+try:
+    DB = json.loads(DB_PATH.read_text(encoding='utf-8')) if DB_PATH.is_file() else {}
+except Exception:
+    DB = {}
+CASE_STUDIES = DB.get('case_studies', {})
+
+# Markers identify the excerpts in the knowledge base.
 BOOK_CASES = {
     'case01': (4522, 4522, 4524, '//  Error: Scan chain chain1 blocked at gate /reg2/df2', '(T3-1)'),
     'case02': (4525, 4525, 4528, '//  Error: Clock inputs of /datao/reg_q_0_', '(T4-1)'),
@@ -71,34 +76,27 @@ def init(case: str, directory: Path) -> int:
     return 0
 
 
-def book_page(number: int) -> str:
-    if not REFERENCE.is_file():
-        raise ValueError(f'Không tìm thấy tài liệu tham chiếu: {REFERENCE}')
-    try:
-        import pymupdf
-    except ImportError as exc:
-        raise ValueError('Thiếu PyMuPDF. Cài bằng: python3 -m pip install pymupdf') from exc
-    try:
-        with pymupdf.open(REFERENCE) as pdf:
-            if number < 1 or number > len(pdf):
-                raise ValueError(f'Trang PDF {number} không tồn tại trong tài liệu.')
-            return pdf[number - 1].get_text()
-    except (OSError, RuntimeError) as exc:
-        raise ValueError(f'Không thể đọc tài liệu: {exc}') from exc
+def book_page(number: int, case: str | None = None) -> str:
+    if not DB:
+        raise ValueError('Không tìm thấy cơ sở dữ liệu tri thức (knowledge_db.json).')
+    if case and case in CASE_STUDIES:
+        texts = CASE_STUDIES[case].get('page_texts', {})
+        if str(number) in texts:
+            return texts[str(number)]
+    for cdata in CASE_STUDIES.values():
+        texts = cdata.get('page_texts', {})
+        if str(number) in texts:
+            return texts[str(number)]
+    raise ValueError(f'Trang PDF {number} không tồn tại trong cơ sở dữ liệu tri thức.')
 
 
 def replay(case: str) -> int:
-    number, _, _, start_marker, end_marker = BOOK_CASES[case]
-    try:
-        page = book_page(number)
-        start = page.find(start_marker)
-        end = page.find(end_marker, start) if start >= 0 else -1
-        if start < 0 or end < 0:
-            raise ValueError(f'Không tìm thấy đoạn lỗi gốc tại trang PDF {number}; kiểm tra phiên bản tài liệu.')
-        excerpt = page[start:end + len(end_marker)]
-    except ValueError as exc:
-        print(exc, file=sys.stderr)
+    case_data = CASE_STUDIES.get(case)
+    if not case_data or not case_data.get('excerpt'):
+        print(f'Không tìm thấy đoạn lỗi gốc cho {case}; kiểm tra cơ sở dữ liệu tri thức.', file=sys.stderr)
         return 2
+    number = case_data.get('strobe_page', case_data.get('pdf_pages', [None])[0])
+    excerpt = case_data['excerpt']
     print(f'Trích trực tiếp từ PDF trang {number} (phát lại; không chạy Tessent DRC):')
     print(excerpt)
     print('Đây là log trong sách, không đánh giá bài làm hay thực thi lại thiết kế.')
@@ -110,10 +108,17 @@ def source(directory: Path, page: int) -> int:
         meta = json.loads((directory / 'case.json').read_text(encoding='utf-8'))
         if not isinstance(meta, dict) or meta.get('format') != FORMAT or meta.get('case') not in BOOK_CASES:
             raise ValueError('Bài này không phải bài đọc nguồn từ sách.')
-        _, first, last, _, _ = BOOK_CASES[meta['case']]
+        case = meta['case']
+        case_data = CASE_STUDIES.get(case)
+        if not case_data:
+            raise ValueError(f'Không tìm thấy dữ liệu bài {case} trong cơ sở tri thức.')
+        first = case_data.get('first_page', case_data.get('pdf_pages', [0])[0])
+        last = case_data.get('last_page', case_data.get('pdf_pages', [0])[-1])
         if page < first or page > last:
             raise ValueError(f'Bài này có trang nguồn từ {first} đến {last}.')
-        original = book_page(page)
+        original = case_data.get('page_texts', {}).get(str(page))
+        if original is None:
+            raise ValueError(f'Không tìm thấy nội dung trang {page} trong cơ sở tri thức.')
     except (OSError, ValueError, json.JSONDecodeError) as exc:
         print(f'Không thể đọc trang nguồn: {exc}', file=sys.stderr)
         return 2
@@ -123,30 +128,16 @@ def source(directory: Path, page: int) -> int:
 
 
 def commands(directory: Path) -> int:
-    """Print the non-Visualizer T3 walkthrough's command lines from the PDF."""
+    """Print the non-Visualizer T3 walkthrough's command lines from the knowledge DB."""
     try:
         meta = json.loads((directory / 'case.json').read_text(encoding='utf-8'))
         if not isinstance(meta, dict) or meta.get('format') != FORMAT or meta.get('case') not in BOOK_CASES:
             raise ValueError('Bài này không phải bài đọc nguồn từ sách.')
-        if meta['case'] != 'case01':
+        case = meta['case']
+        case_data = CASE_STUDIES.get(case)
+        if not case_data or not case_data.get('commands'):
             raise ValueError('Chưa hỗ trợ trích lệnh cho case này.')
-        page_4522 = book_page(4522)
-        page_4523 = book_page(4523)
-        page_4524 = book_page(4524)
-        heading = 'How to Debug T3 Violations Without Tessent Visualizer'
-        if heading not in page_4522:
-            raise ValueError('Không tìm thấy ví dụ T3 không dùng Visualizer trên trang PDF 4522.')
-        # The preceding Visualizer example uses different commands; do not mix
-        # them with this non-Visualizer walkthrough.
-        page_4522 = page_4522.split(heading, 1)[1]
-        prefixes = ('set_trace_report ', 'set_gate_level ', 'set_gate_report ',
-                    'set_system_mode ', 'report_gate ', 'report_gates ')
-        page_commands = {
-            number: [line for line in page.splitlines() if line.startswith(prefixes)]
-            for number, page in ((4522, page_4522), (4523, page_4523), (4524, page_4524))
-        }
-        if tuple(len(page_commands[n]) for n in (4522, 4523, 4524)) != (3, 5, 1):
-            raise ValueError('Không tìm thấy đầy đủ lệnh của ví dụ T3 trong PDF; kiểm tra phiên bản tài liệu.')
+        page_commands = case_data['commands']
     except (OSError, ValueError, json.JSONDecodeError) as exc:
         print(f'Không thể đọc lệnh gốc: {exc}', file=sys.stderr)
         return 2

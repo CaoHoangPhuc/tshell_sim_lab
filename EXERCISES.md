@@ -57,7 +57,7 @@ tshell-exercises source --dir work/case01-study-1 --page 4522
 
 ## Notes & Limitations
 
-- The transcripts and rule excerpts are extracted directly from `tshell_ref.pdf` using PyMuPDF to preserve the authentic wording of the Siemens EDA documentation.
+- The transcripts and rule excerpts are loaded from `tessent_core/knowledge_db.json` without requiring the proprietary PDF at runtime.
 - These case studies are designed for understanding DRC rule semantics and debug methodologies; they do not replace full commercial cell libraries or complete industrial netlists.
-- Reading and replaying book excerpts requires only Python and PyMuPDF. To run older Verilog exercises or the RTL demo, install Icarus Verilog (`iverilog` and `vvp`); on macOS with Homebrew, run `brew install icarus-verilog`. Run the demo with `./rtl/run.sh`.
+- Reading and replaying book excerpts requires only the standard Python library. To run older Verilog exercises or the RTL demo, install Icarus Verilog (`iverilog` and `vvp`); on macOS with Homebrew, run `brew install icarus-verilog`. Run the demo with `./rtl/run.sh`.
 - RTL simulation runs locally with the permissions of the current user, so only run designs and testbenches you trust.

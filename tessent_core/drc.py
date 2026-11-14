@@ -10,6 +10,7 @@ from typing import Any
 from tessent_core.logic4 import Logic4
 from tessent_core.netlist import CircuitGraph
 
+DB_PATH = Path(__file__).resolve().parent / "knowledge_db.json"
 CATALOG_PATH = Path(__file__).resolve().parent / "drc_catalog.json"
 
 
@@ -25,16 +26,22 @@ class DRCViolation:
 
 
 class DRCEngine:
-    """Infers and validates design rules on the circuit graph."""
+    """Infers and validates design rules on the circuit graph using pure in-memory knowledge DB."""
 
-    def __init__(self, ref_pdf: Path | None = None) -> None:
-        self.ref_pdf = ref_pdf or (Path(__file__).resolve().parents[1].parent / "tshell_ref.pdf")
+    def __init__(self, db_path: Path | None = None) -> None:
         self.catalog: dict[str, dict[str, Any]] = {}
-        if CATALOG_PATH.is_file():
+        target_path = db_path or DB_PATH
+        if not target_path.is_file():
+            target_path = CATALOG_PATH
+
+        if target_path.is_file():
             try:
-                self.catalog = json.loads(CATALOG_PATH.read_text(encoding="utf-8"))
+                data = json.loads(target_path.read_text(encoding="utf-8"))
+                # If wrapped in knowledge DB
+                self.catalog = data.get("rules", data)
             except Exception:
                 self.catalog = {}
+
         self.handling_overrides: dict[str, str] = {
             "C1": "Error",
             "C2": "Warning",
@@ -48,19 +55,24 @@ class DRCEngine:
         key = rule_id.upper().split("-")[0].strip()
         return self.catalog.get(key)
 
-    def get_rule_page_text(self, rule_id: str, max_lines: int = 15) -> str | None:
+    def get_rule_summary(self, rule_id: str) -> str | None:
         info = self.get_rule_info(rule_id)
-        if not info or not self.ref_pdf.is_file():
-            return None
-        try:
-            import pymupdf
-            with pymupdf.open(self.ref_pdf) as pdf:
-                page_idx = info["page"] - 1
-                if 0 <= page_idx < len(pdf):
-                    lines = [l.strip() for l in pdf[page_idx].get_text().splitlines() if l.strip()]
-                    return "\n".join(lines[:max_lines])
-        except Exception:
-            return None
+        if info:
+            return info.get("summary") or info.get("title")
+        return None
+
+    def get_rule_excerpt(self, rule_id: str) -> str | None:
+        info = self.get_rule_info(rule_id)
+        if info:
+            return info.get("reference_excerpt")
+        return None
+
+    def get_rule_page_text(self, rule_id: str, max_lines: int = 15) -> str | None:
+        """Retrieve pre-indexed rule documentation summary from the knowledge DB."""
+        summary = self.get_rule_summary(rule_id)
+        if summary:
+            lines = summary.splitlines()[:max_lines]
+            return "\n".join(lines)
         return None
 
     def run_all_checks(

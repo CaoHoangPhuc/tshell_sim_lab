@@ -11,7 +11,7 @@ Xây dựng một lab học tập chạy trực tiếp trên máy, mô phỏng *
 - [ ] Trong `tshell.py` và `tessent_core/state.py`, trả lỗi rõ cho lệnh chưa thực sự được triển khai; `create_patterns` và `write_tsdb_data` không được tuyên bố tạo pattern hoặc TSDB thật khi chỉ có placeholder.
 - [ ] Batch `-c`/`-f` phải trả mã lỗi khác 0 và dừng khi gặp lệnh không hợp lệ, file không tồn tại hoặc lỗi thực thi; kiểm thử từng trường hợp và trường hợp thành công.
 - [ ] Tách phần **trích dẫn ví dụ từ PDF** khỏi báo cáo DRC của thiết kế hiện tại; không hiển thị transcript sách như vi phạm được phát hiện trên mạch.
-- [ ] Trong `tessent_core/state.py`, `tessent_core/drc.py`, `exercises.py`, dùng PDF trong project hoặc đường dẫn cấu hình rõ ràng; test chạy trong bản sao project độc lập, có và không có PDF.
+- [ ] Trong `tessent_core/state.py`, `tessent_core/drc.py`, `exercises.py`, hỗ trợ PDF bên ngoài qua đường dẫn cấu hình rõ ràng; PDF chỉ là tài nguyên tùy chọn, không phân phối trong repo. Test core chạy không cần PDF; test tích hợp với bản PDF hợp lệ chạy riêng khi có tài liệu, và báo skip rõ ràng khi thiếu.
 - [ ] Cập nhật README: báo đúng số lượng mục catalog, nêu rõ chức năng thực tế, giới hạn coverage và Icarus là tùy chọn cho RTL; cài lại trên venv sạch, kiểm tra các CLI và `pip check`.
 
 **Hoàn thành khi:** không còn kết quả thành công giả; lỗi batch có mã thoát đúng; project chạy độc lập với thư mục cha. Những quy tắc chưa triển khai trả trạng thái chưa hỗ trợ, không được báo là đã kiểm tra và sạch.
@@ -21,6 +21,7 @@ Xây dựng một lab học tập chạy trực tiếp trên máy, mô phỏng *
 - [ ] Đặc tả trong README hoặc tài liệu riêng các cấu trúc hỗ trợ: port, wire, primitive cơ bản, biểu thức, DFF, reset, clock và scan mux; ghi rõ các cấu trúc chưa hỗ trợ.
 - [ ] Thay parser regex trong `tessent_core/netlist.py` bằng parser kiểm tra cú pháp hoặc frontend có khả năng xử lý tập con đã chọn. Không tự tạo scan chain dựa vào thứ tự `reg`; cấu trúc không hỗ trợ phải báo lỗi có vị trí thay vì bỏ qua.
 - [ ] Thêm fixture độc lập cho AND instance (đủ bốn tổ hợp), biểu thức có ngoặc/lồng nhau, mạch hai DFF với shift và capture, cùng ví dụ cú pháp không hỗ trợ.
+- [ ] Định nghĩa cell mẫu, chân, cực tính, reset, ánh xạ bus và cách xử lý cell/hierarchy chưa hỗ trợ. Chọn một hướng nhất quán: hỗ trợ mẫu `always @(posedge clk)` giới hạn mà `insertion.py` đang sinh, hoặc đổi đầu ra insertion sang cell structural có model tương ứng. Test tích hợp từ insertion → parser → simulation và đối chiếu Icarus.
 
 **Hoàn thành khi:** graph phản ánh đúng connectivity của fixture; fixture không hỗ trợ bị từ chối; không có gate hoặc port âm thầm biến mất.
 
@@ -36,6 +37,7 @@ Xây dựng một lab học tập chạy trực tiếp trên máy, mô phỏng *
 - [ ] Trong `tessent_core/atpg.py`, chạy mạch chuẩn và mạch có fault từ cùng trạng thái đầu cho từng pattern; chỉ đánh dấu detected khi kết quả quan sát xác định và khác nhau. Định nghĩa hành vi với X/Z và vị trí tiêm fault.
 - [ ] Thêm test cho net không nối, fault bị che, fault quan sát được, SA0/SA1, scan unload, và vét cạn input của mạch nhỏ; kiểm tra cả tử số và mẫu số coverage.
 - [ ] Chỉ phân loại và tính các loại fault thực sự được hỗ trợ; không tự coi fault chưa phát hiện là untestable. `create_patterns` chỉ được công bố là hoạt động khi thực sự tạo và lưu pattern.
+- [ ] Phân biệt fault grading của pattern đã có với ATPG tạo pattern; không gọi phần đầu là ATPG hoàn chỉnh. Công bố định nghĩa tử số/mẫu số và các loại fault hỗ trợ: `DS / total` chỉ là tỷ lệ riêng của DS trên tập fault được mô hình hóa, không mặc định là công thức tổng quát cho mọi phân loại của Tessent.
 
 **Hoàn thành khi:** net không nối và fault bị che không bị tính detected; kết quả good/faulty và coverage khớp oracle độc lập trên mạch nhỏ.
 
@@ -44,6 +46,8 @@ Xây dựng một lab học tập chạy trực tiếp trên máy, mô phỏng *
 - [ ] Xây dựng biểu diễn scan chain, test procedure và timeplate cần cho các kiểm tra; không dùng `injected_anomalies` làm bằng chứng phát hiện trên thiết kế.
 - [ ] Thực hiện lần lượt C1/C2, T3, T4/T5, D1 theo phạm vi đã đặc tả, đối chiếu Reference Manual trang PDF 3809–3814, 3863–3866, 4522–4531 và User's Manual trang 923, 927, 955.
 - [ ] Với mỗi rule, thêm một fixture hợp lệ, một fixture vi phạm có nguyên nhân rõ và test thiếu thông tin procedure; quy tắc chưa đủ dữ liệu phải báo chưa kiểm tra.
+- [ ] Chuẩn hóa trạng thái từng rule: `NOT_RUN`, `PASSED`, `VIOLATION`, `INCOMPLETE_DATA`, `UNSUPPORTED`. Kết quả tổng không được coi là sạch nếu rule bắt buộc chưa chạy, thiếu dữ liệu hoặc không hỗ trợ. Mô hình `ScanChain` và `TestProcedure` có giao diện rõ, không bắt buộc nhúng vào `CircuitGraph`.
+- [ ] Thực hiện simulator theo chu kỳ và model procedure trước DRC phụ thuộc thời gian. C1 xét trạng thái pin theo từng cell và cực tính, gồm set/reset; C2 xét các đường liên quan đến clock, set/reset và enable theo phạm vi hỗ trợ. T4 yêu cầu active event trong shift; T5 xét X trên clock và X/active trên set/reset; D1 xét disturbance qua các thời điểm procedure. Thiếu ngữ nghĩa hoặc dữ liệu thì báo chưa hỗ trợ/chưa đủ, không suy luận chỉ từ kết nối tĩnh.
 
 **Hoàn thành khi:** DRC báo đúng vị trí/nguyên nhân ở fixture vi phạm, không báo vi phạm ở fixture hợp lệ, và phân biệt được sạch với chưa được kiểm tra.
 
@@ -52,17 +56,30 @@ Xây dựng một lab học tập chạy trực tiếp trên máy, mô phỏng *
 - [ ] Lập bảng lệnh: cú pháp manual, context/mode hợp lệ, trạng thái hỗ trợ và sai khác có chủ ý. Ưu tiên `set_context`, `set_system_mode`, `read_verilog`, `add_clocks`, `check_design_rules`, `report_drc_rules`, `add_faults`, `simulate_patterns`.
 - [ ] Sửa `add_clocks` theo Reference Manual trang PDF 131; kiểm thử `add_clocks 0 clk`, tham số sai và clock không tồn tại. Đối chiếu các mode trong User's Manual trang 35–39.
 - [ ] Quy định nguồn pattern cho `simulate_patterns` theo Reference Manual trang 3510, từ chối tùy chọn chưa hỗ trợ. Không giả lập workflow đầy đủ của User's Manual trang 248 khi thiếu cell library hoặc bước bắt buộc.
+- [ ] Giữ `report_drc_rules` dành cho kết quả DRC thực tế theo phần hỗ trợ của manual; chuyển tra cứu/trích dẫn tài liệu sang lệnh riêng có tên phân biệt. Xác minh cú pháp từng lệnh, bao gồm scan chain và pin constraints, trước khi công bố tương thích.
 - [ ] Mỗi lệnh được đánh dấu hỗ trợ phải có test thành công, lỗi cú pháp, sai mode và batch exit status. Những lệnh còn lại trả lỗi chưa hỗ trợ.
 
 **Hoàn thành khi:** bảng khả năng và hành vi thực tế khớp nhau; ví dụ từ manual trong phạm vi hỗ trợ chạy đúng hoặc báo rõ lý do chưa hỗ trợ.
 
 ## 6. Kiểm thử phát hành và bảo trì
 
-- [ ] Chạy bộ Python và RTL native trong môi trường sạch; kiểm tra thiếu Icarus và thiếu PDF đều có thông báo phù hợp. Thiết lập CI cho các phiên bản Python thực sự hỗ trợ.
+- [ ] Thiết lập CI ngay từ giai đoạn 0 cho bộ core không PDF; chạy RTL native với Icarus ở job riêng và kiểm tra thông báo thiếu công cụ. Xác minh phiên bản Python, hệ điều hành và dependency thực tế trước khi công bố matrix; bổ sung test PDF tùy chọn ngoài CI công khai khi có tài liệu hợp lệ.
 - [ ] Đối chiếu fixture với expected độc lập và Icarus; test trích transcript PDF chỉ chứng minh đọc tài liệu, không chứng minh DRC/ATPG đúng.
 - [ ] Ghi lại phiên bản, lệnh tái hiện, kết quả và các giới hạn còn lại; rà lại README sau mỗi giai đoạn.
 
-**Điều kiện hoàn tất roadmap:** toàn bộ tiêu chí của từng giai đoạn đạt, không còn test bị bỏ qua do cấu hình ở môi trường kiểm thử đầy đủ, và mọi khác biệt chưa thực hiện đều được ghi rõ. Tính tương đương với sản phẩm Tessent thương mại không thuộc tiêu chí hoàn tất.
+**Điều kiện hoàn tất roadmap:** toàn bộ tiêu chí của từng giai đoạn đạt; bộ core và RTL chạy đầy đủ trong môi trường có Icarus, còn test PDF tùy chọn chạy riêng trong môi trường có tài liệu hợp lệ. Mọi khác biệt chưa thực hiện đều được ghi rõ. Tính tương đương với sản phẩm Tessent thương mại không thuộc tiêu chí hoàn tất.
+
+## Điều chỉnh sau review Antigravity
+
+Phụ lục bên dưới được giữ nguyên làm lịch sử review. Khi có khác biệt, **các mục 0–6 và phần điều chỉnh này là kế hoạch ưu tiên**, không lấy ví dụ hoặc ước lượng trong phụ lục làm đặc tả thực thi.
+
+- **Đồng ý:** chia milestone, PDF tùy chọn theo Zero-Asset Policy, thêm trạng thái DRC, model scan/procedure và CI. Trong `.gitignore` hiện có `*.pdf`, và không có PDF được Git theo dõi; điều này không tự xác nhận mọi khẳng định pháp lý hoặc nguồn gốc dữ liệu khác.
+- **Thứ tự triển khai:** P0 minh bạch + CI cơ bản → parser và model cell → logic/scan theo thời gian → DRC theo rule và fault grading → pattern generation nếu nằm trong phạm vi đã đặc tả. DRC theo procedure không thể hoàn thiện chỉ bằng graph traversal trước simulator theo thời gian.
+- **Cú pháp và semantics:** ví dụ `add_clocks clk -off_state 0` ở phụ lục không khớp manual trang 131; ví dụ phù hợp là `add_clocks 0 clk`. Cú pháp `add_scan_chains chain1 -scan_in ...` trong phụ lục cũng không khớp: manual trang 374 yêu cầu group đã khai báo, ví dụ `add_scan_chains chain1 grp1 si1 so1`. `report_drc_rules` không nên được đổi thành lệnh chỉ tra cứu sách. C1/C2, T4/T5 và D1 cần xử lý theo model pin, cực tính và thời gian đã nêu ở mục 4, không áp dụng nguyên xi các giả định trong phụ lục.
+- **Không khóa trước cách viết parser:** parser thuần Python là một lựa chọn, không phải yêu cầu; chọn frontend sau khi thử nghiệm khả năng, giấy phép, tính di động và test. Tập con chỉ structural như phụ lục chưa đọc được output behavioral của `insertion.py`; phải giải quyết bài toán tích hợp ở mục 1.
+- **Không coi warning là thành công:** lệnh placeholder phải báo chưa hỗ trợ và batch trả nonzero. `DS / total` và các nhãn fault chỉ được công bố theo phân loại được triển khai; fault grading và ATPG là hai chức năng khác nhau.
+- **Mốc phiên bản/thời gian:** các nhãn `v0.1.1`–`v1.0.0`, thời lượng và matrix Python trong phụ lục là đề xuất sơ bộ, không phải cam kết. Định lại sau khi thử parser, ước lượng các fixture thời gian và kiểm tra dependency trên từng môi trường.
+- **Kiểm thử và tài liệu:** core test phải pass không PDF; test phụ thuộc PDF được tách riêng, không gán số lượng test cố định. Rà soát các trích dẫn, fixture, catalog và khẳng định trong `LEGAL.md` trước khi phân phối; không suy ra đảm bảo pháp lý chỉ từ việc không đưa PDF vào Git.
 
 
 ---

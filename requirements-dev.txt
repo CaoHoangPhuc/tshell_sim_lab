@@ -1,3 +1,4 @@
 -r requirements.txt
 pytest>=7.0.0
 pytest-cov>=4.0.0
+pymupdf>=1.23.0  # Optional: offline ingestion only (tools/build_knowledge_db.py)

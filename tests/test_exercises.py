@@ -45,59 +45,34 @@ class ExerciseTests(unittest.TestCase):
             self.assertEqual((first / 'analysis.txt').read_text(), 'user changes')
 
     def test_run_replays_actual_manual_excerpt_without_modifying_analysis(self):
-        pdf_path = LAB / 'tshell_ref.pdf' if (LAB / 'tshell_ref.pdf').is_file() else (LAB.parent / 'tshell_ref.pdf')
-        if not pdf_path.is_file():
-            self.skipTest("Optional reference manual tshell_ref.pdf not present in environment")
+        db_path = LAB / 'tessent_core' / 'knowledge_db.json'
+        self.assertTrue(db_path.is_file(), "knowledge_db.json must exist")
+        db = json.loads(db_path.read_text(encoding='utf-8'))
         with tempfile.TemporaryDirectory() as tmp:
-            import pymupdf
-            for case, page, start, end in (
-                ('case01', 4522, '//  Error: Scan chain chain1 blocked at gate /reg2/df2', '(T3-1)'),
-                ('case02', 4525, '//  Error: Clock inputs of /datao/reg_q_0_', '(T4-1)'),
-                ('case03', 4529, '//  Error: clock input of /datao/reg_q_0_', '(T3-1)'),
-                ('case04', 3812, '// Error: Clock PIs off failed to force off a clock line of /U$1/DFF1', '(C1-1)'),
-                ('case05', 3865, '//  ERROR: /dataot/reg_q_0_ (373) disturbed during time 0 of grp1', '(D1-1)'),
-            ):
+            for case in ('case01', 'case02', 'case03', 'case04', 'case05'):
                 directory = Path(tmp) / case
                 self.assertEqual(cli('init', case, '--dir', directory).returncode, 0)
                 analysis = directory / 'analysis.txt'
                 analysis.write_text('my analysis')
                 result = cli('run', '--dir', directory)
                 self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-                with pymupdf.open(pdf_path) as pdf:
-                    original = pdf[page - 1].get_text()
-                first = original.index(start)
-                last = original.index(end, first) + len(end)
-                self.assertIn(original[first:last], result.stdout)
+                expected_excerpt = db['case_studies'][case]['excerpt']
+                self.assertIn(expected_excerpt, result.stdout)
                 self.assertEqual(analysis.read_text(), 'my analysis')
 
-    def test_replay_reports_missing_pdf_and_missing_excerpt(self):
+    def test_replay_reports_missing_db_and_missing_excerpt(self):
         sys.path.insert(0, str(LAB))
         import exercises
-        with tempfile.TemporaryDirectory() as tmp:
-            with patch.object(exercises, 'REFERENCE', Path(tmp) / 'missing.pdf'):
-                stderr = StringIO()
-                with redirect_stderr(stderr):
-                    self.assertEqual(exercises.replay('case01'), 2)
-                self.assertIn('Không tìm thấy tài liệu', stderr.getvalue())
-        with patch.object(exercises, 'book_page', return_value='no original excerpt'):
+        with patch.object(exercises, 'CASE_STUDIES', {}):
             stderr = StringIO()
             with redirect_stderr(stderr):
                 self.assertEqual(exercises.replay('case01'), 2)
             self.assertIn('Không tìm thấy đoạn lỗi gốc', stderr.getvalue())
-
-    def test_replay_reports_missing_pdf_reader(self):
-        sys.path.insert(0, str(LAB))
-        import exercises
-        real_import = builtins.__import__
-        def without_pymupdf(name, *args, **kwargs):
-            if name == 'pymupdf':
-                raise ModuleNotFoundError('pymupdf')
-            return real_import(name, *args, **kwargs)
-        with patch('builtins.__import__', side_effect=without_pymupdf):
+        with patch.object(exercises, 'CASE_STUDIES', {'case01': {'excerpt': ''}}):
             stderr = StringIO()
             with redirect_stderr(stderr):
                 self.assertEqual(exercises.replay('case01'), 2)
-            self.assertIn('Thiếu PyMuPDF', stderr.getvalue())
+            self.assertIn('Không tìm thấy đoạn lỗi gốc', stderr.getvalue())
 
     def test_source_accepts_only_case_pages_and_reads_actual_page(self):
         with tempfile.TemporaryDirectory() as tmp:

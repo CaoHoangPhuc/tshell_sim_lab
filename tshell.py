@@ -18,12 +18,6 @@ from pathlib import Path
 LAB_DIR = Path(__file__).resolve().parent
 sys.path.insert(0, str(LAB_DIR))
 
-try:
-    import pymupdf
-    PYMUPDF_AVAILABLE = True
-except ImportError:
-    PYMUPDF_AVAILABLE = False
-
 from tessent_core.atpg import ATPGStatistics, FaultClass
 from tessent_core.drc import DRCViolation
 from tessent_core.logic4 import Logic4
@@ -183,36 +177,8 @@ class TessentShell(cmd.Cmd):
         """report_drc_rules [<rule_id>] : Report DRC rules or detailed violation excerpt from manual"""
         rule_id = arg.strip()
         if rule_id:
-            # Check if excerpt available from reference manual
-            excerpt = None
-            if PYMUPDF_AVAILABLE and self.fsm.ref_pdf.is_file():
-                rule_map = {
-                    "t3": (4522, "//  Error: Scan chain chain1 blocked at gate /reg2/df2", "(T3-1)"),
-                    "t3-1": (4522, "//  Error: Scan chain chain1 blocked at gate /reg2/df2", "(T3-1)"),
-                    "t4": (4525, "//  Error: Clock inputs of /datao/reg_q_0_", "(T4-1)"),
-                    "t4-1": (4525, "//  Error: Clock inputs of /datao/reg_q_0_", "(T4-1)"),
-                    "t5": (4529, "//  Error: clock input of /datao/reg_q_0_", "(T3-1)"),
-                    "t5-1": (4529, "//  Error: clock input of /datao/reg_q_0_", "(T3-1)"),
-                    "c1": (3812, "// Error: Clock PIs off failed to force off a clock line of /U$1/DFF1", "(C1-1)"),
-                    "c1-1": (3812, "// Error: Clock PIs off failed to force off a clock line of /U$1/DFF1", "(C1-1)"),
-                    "c2": (3814, "Clock P cannot reach the clock port of any memory element. (C2-1)", "(C2-1)"),
-                    "c2-1": (3814, "Clock P cannot reach the clock port of any memory element. (C2-1)", "(C2-1)"),
-                    "d1": (3865, "//  ERROR: /dataot/reg_q_0_ (373) disturbed during time 0 of grp1", "(D1-1)"),
-                    "d1-1": (3865, "//  ERROR: /dataot/reg_q_0_ (373) disturbed during time 0 of grp1", "(D1-1)"),
-                }
-                key = rule_id.lower()
-                if key in rule_map:
-                    p_num, s_m, e_m = rule_map[key]
-                    try:
-                        with pymupdf.open(self.fsm.ref_pdf) as pdf:
-                            page_text = pdf[p_num - 1].get_text()
-                            st = page_text.find(s_m)
-                            en = page_text.find(e_m, st) if st >= 0 else -1
-                            if st >= 0 and en >= 0:
-                                excerpt = page_text[st:en + len(e_m)]
-                    except Exception:
-                        pass
-
+            # Check if excerpt available from knowledge DB
+            excerpt = self.fsm.drc_engine.get_rule_excerpt(rule_id)
             if excerpt:
                 print(f"//  --- DRC Rule Excerpt from Reference Manual ({rule_id.upper()}) ---")
                 print(excerpt)

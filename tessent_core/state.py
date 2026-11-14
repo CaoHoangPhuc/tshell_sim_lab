@@ -31,15 +31,14 @@ class SessionFSM:
 
     VALID_MODES = ("setup", "analysis")
 
-    def __init__(self, ref_pdf: Path | None = None) -> None:
-        self.ref_pdf = ref_pdf or (Path(__file__).resolve().parents[1].parent / "tshell_ref.pdf")
+    def __init__(self) -> None:
         self.context: str = "patterns -scan"
         self.system_mode: str = "setup"
         self.circuit: CircuitGraph = CircuitGraph()
         self.clocks: dict[str, ClockSpec] = {}
         self.scan_chains: list[dict[str, Any]] = []
         self.pin_constraints: dict[str, int] = {}
-        self.drc_engine = DRCEngine(self.ref_pdf)
+        self.drc_engine = DRCEngine()
         self.atpg_engine = ATPGEngine()
         self.last_drc_violations: list[DRCViolation] = []
         self.last_statistics: ATPGStatistics = ATPGStatistics()

@@ -12,7 +12,7 @@ An educational Python-based EDA simulation environment modeling Siemens/Mentor *
    - Interactive Tcl-like command-line interface conforming to standard Tessent Shell conventions.
    - Context switching (`set_context patterns -scan`) and system mode transitions (`setup` ⇄ `analysis`).
    - Verilog netlist loading, pin/clock constraints definition (`add_clocks`, `add_pin_constraints`).
-   - Live Design Rule Checking (DRC) rule querying from the official Reference Manual using PyMuPDF.
+   - Design Rule Checking (DRC) rule querying backed by a pre-compiled in-memory knowledge database (`tessent_core/knowledge_db.json`).
    - Demonstration stuck-at fault injection and coverage output. The current fault grading is not validated and must not be used to assess a design.
 
 2. **Deductive 4-State Logic Engine**:
@@ -44,7 +44,8 @@ source .venv/bin/activate
 
 ### 2. Install Package in Editable Mode
 ```bash
-# Install core dependencies (PyMuPDF) and development tools (pytest)
+# Core simulation has ZERO runtime dependencies (pure standard library).
+# Install with optional development tools (pytest, pymupdf for offline ingestion):
 pip install -e ".[dev]"
 ```
 
@@ -139,8 +140,8 @@ The current implementation is an educational subset, not a substitute for Tessen
 ```
 tshell_sim_lab/
 ├── pyproject.toml              # PEP 517/621 package configuration & CLI scripts
-├── requirements.txt            # Runtime dependencies (PyMuPDF)
-├── requirements-dev.txt        # Development dependencies (pytest)
+├── requirements.txt            # Pure standard library (zero runtime dependencies)
+├── requirements-dev.txt        # Development dependencies (pytest, pymupdf for offline ingestion)
 ├── tshell.py                   # Tessent Mock Shell CLI entrypoint
 ├── exercises.py                # Reference book case replay & study tool
 ├── insertion.py                # Scan chain insertion engine
@@ -149,16 +150,19 @@ tshell_sim_lab/
 ├── tessent_core/               # Core EDA simulation engine
 │   ├── atpg.py                 # ATPG fault injection, simulation & statistics
 │   ├── drc.py                  # DRC rule evaluation & oracle reader
+│   ├── knowledge_db.json       # Pre-indexed knowledge DB (rules, excerpts, case studies)
 │   ├── drc_catalog.json        # 600 catalog entries mapped to manual pages
 │   ├── logic4.py               # IEEE 1164 4-state logic algebra (0, 1, X, Z)
 │   ├── netlist.py              # Gate-level netlist and circuit graph model
 │   └── state.py                # Tessent session FSM (SETUP <-> ANALYSIS)
-├── tests/                      # Comprehensive unit tests (35 test cases)
+├── tools/
+│   └── build_knowledge_db.py   # Offline tool to rebuild knowledge_db.json from PDF
+├── tests/                      # Comprehensive unit tests (37 test cases)
 ├── examples/                   # Sample circuit JSON specifications
 └── rtl/                        # Verilog testbenches for optional hardware cross-check
 ```
 
-> **Zero-Asset Policy**: Proprietary reference manuals (`*.pdf`) are **not** bundled or distributed in this repository. Users with a legitimate copy may optionally place `tshell_ref.pdf` in the root or parent directory to enable real-time PDF excerpt rendering.
+> **Zero-Asset Policy**: Proprietary reference manuals (`*.pdf`) are **not** bundled, distributed, or accessed at runtime in this repository. All structural metadata, rule definitions, and manual excerpts are pre-indexed into `tessent_core/knowledge_db.json`. When manual revisions occur, developers can use the offline ingestion tool (`tools/build_knowledge_db.py --pdf <path>`) to update the knowledge base.
 
 ---
 

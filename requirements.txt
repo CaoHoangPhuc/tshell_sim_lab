@@ -1,1 +1,1 @@
-pymupdf>=1.23.0
+# Pure Python standard library (zero runtime dependencies)
