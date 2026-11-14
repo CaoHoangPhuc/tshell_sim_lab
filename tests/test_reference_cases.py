@@ -178,6 +178,46 @@ class ReferenceBookTestUnits(unittest.TestCase):
         scan_in_sa0 = atpg.faults.get("scan_in/SA0")
         self.assertEqual(scan_in_sa0.status, FaultClass.DS)
 
+    def test_pure_algorithmic_drc_checks(self):
+        """Verify DRC engine detects real structural violations without injected_anomalies."""
+        engine = DRCEngine()
+
+        # 1. Structural T3 Detection: AND gate with 0 blocking scan chain
+        c_t3 = CircuitGraph("t3_structural")
+        c_t3.add_port("scan_in", "in")
+        c_t3.add_port("scan_en", "in")
+        c_t3.add_port("clk", "in")
+        c_t3.add_port("scan_out", "out")
+        c_t3.add_gate(Gate("block_and", "AND", inputs={"in1": "scan_in", "in2": "zero_net"}, outputs={"out": "d_blocked"}))
+        c_t3.add_gate(Gate("dff1", "DFF", inputs={"clk": "clk", "d": "d_blocked"}, outputs={"Q": "scan_out"}))
+        c_t3.nets["zero_net"] = Logic4.ZERO
+
+        v_t3 = engine.run_all_checks(c_t3, clocks={"clk": 0}, scan_chains=[{"name": "chain1", "scan_in": "scan_in", "scan_out": "scan_out", "cells": ["dff1"]}])
+        self.assertTrue(any(v.rule_id == "T3-1" and v.offending_gate == "block_and" for v in v_t3))
+
+        # 2. Structural D1 Detection: Active asynchronous reset line during shift
+        c_d1 = CircuitGraph("d1_structural")
+        c_d1.add_port("scan_in", "in")
+        c_d1.add_port("scan_en", "in")
+        c_d1.add_port("clk", "in")
+        c_d1.add_port("scan_out", "out")
+        c_d1.add_gate(Gate("dff1", "DFF", inputs={"clk": "clk", "d": "scan_in", "reset": "stuck_rst"}, outputs={"Q": "scan_out"}))
+        c_d1.nets["stuck_rst"] = Logic4.ONE
+
+        v_d1 = engine.run_all_checks(c_d1, clocks={"clk": 0}, scan_chains=[{"name": "chain1", "scan_in": "scan_in", "scan_out": "scan_out", "cells": ["dff1"]}])
+        self.assertTrue(any(v.rule_id == "D1-1" and v.offending_gate == "dff1" for v in v_d1))
+
+        # 3. Structural T5 Detection: Unconstrained floating clock (X state)
+        c_t5 = CircuitGraph("t5_structural")
+        c_t5.add_port("scan_in", "in")
+        c_t5.add_port("scan_en", "in")
+        c_t5.add_port("floating_clk", "in")
+        c_t5.add_port("scan_out", "out")
+        c_t5.add_gate(Gate("dff1", "DFF", inputs={"clk": "floating_clk", "d": "scan_in"}, outputs={"Q": "scan_out"}))
+
+        v_t5 = engine.run_all_checks(c_t5, clocks={}, scan_chains=[{"name": "chain1", "scan_in": "scan_in", "scan_out": "scan_out", "cells": ["dff1"]}])
+        self.assertTrue(any(v.rule_id == "T5-1" and v.offending_gate == "dff1" for v in v_t5))
+
 
 if __name__ == "__main__":
     unittest.main()

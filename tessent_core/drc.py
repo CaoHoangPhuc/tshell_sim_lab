@@ -74,15 +74,28 @@ class DRCEngine:
         anomalies = injected_anomalies or set()
         violations: list[DRCViolation] = []
 
-        # 1. C2 Rule: Clock reachability check
+        # -----------------------------------------------------------------
+        # 1. Rule C2: Clock Reachability Check (Forward Graph Traversal)
+        # -----------------------------------------------------------------
         for clk_pin in clocks:
             reached = False
-            for gate in circuit.gates.values():
-                if gate.gate_type.upper() == "DFF":
-                    clk_net = gate.inputs.get("clk", gate.inputs.get("CLK", ""))
-                    if clk_net == clk_pin:
-                        reached = True
-                        break
+            visited = {clk_pin}
+            queue = [clk_pin]
+            while queue and not reached:
+                curr_net = queue.pop(0)
+                for gate in circuit.gates.values():
+                    if curr_net in gate.inputs.values():
+                        if gate.gate_type.upper() == "DFF":
+                            dff_clk = gate.inputs.get("clk", gate.inputs.get("CLK"))
+                            if dff_clk == curr_net:
+                                reached = True
+                                break
+                        else:
+                            for out_net in gate.outputs.values():
+                                if out_net not in visited:
+                                    visited.add(out_net)
+                                    queue.append(out_net)
+
             if not reached or "C2" in anomalies:
                 violations.append(DRCViolation(
                     rule_id="C2-1",
@@ -93,17 +106,20 @@ class DRCEngine:
                     book_reference="Tessent Shell Reference Manual (p. 3814)",
                 ))
 
-        # 2. C1 Rule: Clocks off state check
-        # Set all defined clocks to their off states
+        # -----------------------------------------------------------------
+        # 2. Rule C1: Clocks Off-State Check (Backward Graph & Simulation)
+        # -----------------------------------------------------------------
+        eval_c = circuit.clone()
         for clk_pin, off_val in clocks.items():
-            circuit.set_primary_input(clk_pin, off_val)
-        circuit.propagate_combinational()
+            eval_c.set_primary_input(clk_pin, off_val)
+        if "reset" in eval_c.primary_inputs:
+            eval_c.set_primary_input("reset", 0)
+        eval_c.propagate_combinational()
 
-        for gate in circuit.gates.values():
+        for gate in eval_c.gates.values():
             if gate.gate_type.upper() == "DFF":
                 clk_net = gate.inputs.get("clk", gate.inputs.get("CLK", "clk"))
-                clk_val = circuit.nets.get(clk_net, Logic4.X)
-                # Violation if clock line is active (1) or X when clocks are off
+                clk_val = eval_c.nets.get(clk_net, Logic4.X)
                 if clk_val != Logic4.ZERO or "C1" in anomalies:
                     violations.append(DRCViolation(
                         rule_id="C1-1",
@@ -111,47 +127,161 @@ class DRCEngine:
                         category="Clock",
                         message=f"Clock PIs off failed to force off a clock line of {gate.name}.",
                         offending_gate=gate.name,
+                        offending_pin=clk_net,
                         book_reference="Tessent Shell Reference Manual (p. 3809, 3812)",
                     ))
 
-        # 3. T Rules: Scan chain trace check
-        if scan_chains:
-            for chain in scan_chains:
-                chain_name = chain.get("name", "chain1")
-                scan_in = chain.get("scan_in", "scan_in")
-                scan_out = chain.get("scan_out", "scan_out")
-                cells = chain.get("cells", [])
+        # -----------------------------------------------------------------
+        # 3. Rule T3, T4, T5: Scan Chain Tracing in Shift Mode
+        # -----------------------------------------------------------------
+        chains = scan_chains
+        if not chains and circuit.scan_cells:
+            chains = [{
+                "name": "chain1",
+                "scan_in": "scan_in" if "scan_in" in circuit.primary_inputs else list(circuit.primary_inputs)[0],
+                "scan_out": "scan_out" if "scan_out" in circuit.primary_outputs else list(circuit.primary_outputs)[0],
+                "cells": list(circuit.scan_cells),
+            }]
 
-                if "T3" in anomalies:
-                    violations.append(DRCViolation(
-                        rule_id="T3-1",
-                        severity=self.handling_overrides.get("T3", "Error"),
-                        category="Trace",
-                        message=f"Scan chain {chain_name} blocked at gate /reg2/df2 after tracing 1 cells.",
-                        offending_gate="/reg2/df2",
-                        book_reference="Tessent Shell Reference Manual (p. 4522)",
-                    ))
-                elif "T4" in anomalies:
-                    violations.append(DRCViolation(
-                        rule_id="T4-1",
-                        severity=self.handling_overrides.get("T4", "Error"),
-                        category="Trace",
-                        message="Clock inputs of /datao/reg_q_0_ not stable during shift.",
-                        offending_gate="/datao/reg_q_0_",
-                        book_reference="Tessent Shell Reference Manual (p. 4525)",
-                    ))
-                elif "T5" in anomalies:
-                    violations.append(DRCViolation(
-                        rule_id="T5-1",
-                        severity=self.handling_overrides.get("T5", "Error"),
-                        category="Trace",
-                        message="clock input of /datao/reg_q_0_ has X value during shift.",
-                        offending_gate="/datao/reg_q_0_",
-                        book_reference="Tessent Shell Reference Manual (p. 4529)",
-                    ))
+        shift_c = circuit.clone()
+        if "scan_en" in shift_c.primary_inputs:
+            shift_c.set_primary_input("scan_en", 1)
+        if "reset" in shift_c.primary_inputs:
+            shift_c.set_primary_input("reset", 0)
+        for clk_pin, off_val in clocks.items():
+            shift_c.set_primary_input(clk_pin, off_val)
+        shift_c.propagate_combinational()
 
-        # 4. D Rules: Scan cell data disturb check
-        if "D1" in anomalies:
+        for chain in chains:
+            chain_name = chain.get("name", "chain1")
+            scan_in = chain.get("scan_in", "scan_in")
+            scan_out = chain.get("scan_out", "scan_out")
+            cells = chain.get("cells", [])
+
+            # T4 & T5 Checks: Verify clock stability on all cells in the chain during shift
+            for cell_name in cells:
+                gate = shift_c.gates.get(cell_name)
+                if gate and gate.gate_type.upper() == "DFF":
+                    clk_net = gate.inputs.get("clk", gate.inputs.get("CLK"))
+                    clk_val = shift_c.nets.get(clk_net, Logic4.X)
+                    if clk_val == Logic4.X or "T5" in anomalies:
+                        violations.append(DRCViolation(
+                            rule_id="T5-1",
+                            severity=self.handling_overrides.get("T5", "Error"),
+                            category="Trace",
+                            message=f"clock input of {gate.name} has X value during shift.",
+                            offending_gate=gate.name,
+                            offending_pin=clk_net,
+                            book_reference="Tessent Shell Reference Manual (p. 4529)",
+                        ))
+                    elif clk_net not in clocks and "T4" in anomalies:
+                        violations.append(DRCViolation(
+                            rule_id="T4-1",
+                            severity=self.handling_overrides.get("T4", "Error"),
+                            category="Trace",
+                            message=f"Clock inputs of {gate.name} not stable during shift.",
+                            offending_gate=gate.name,
+                            offending_pin=clk_net,
+                            book_reference="Tessent Shell Reference Manual (p. 4525)",
+                        ))
+
+            # T3 Check: Sensitized Scan Path Tracing
+            traced_count = 0
+            blocked = False
+            curr_signal = scan_in
+
+            for cell_name in cells:
+                target_gate = shift_c.gates.get(cell_name)
+                if not target_gate:
+                    continue
+
+                for g in shift_c.gates.values():
+                    if curr_signal in g.inputs.values():
+                        if g.gate_type.upper() in ("AND", "NAND"):
+                            for pin, in_net in g.inputs.items():
+                                if in_net != curr_signal and shift_c.nets.get(in_net) == Logic4.ZERO:
+                                    blocked = True
+                                    violations.append(DRCViolation(
+                                        rule_id="T3-1",
+                                        severity=self.handling_overrides.get("T3", "Error"),
+                                        category="Trace",
+                                        message=f"Scan chain {chain_name} blocked at gate {g.name} after tracing {traced_count} cells.",
+                                        offending_gate=g.name,
+                                        book_reference="Tessent Shell Reference Manual (p. 4522)",
+                                    ))
+                                    break
+                        elif g.gate_type.upper() in ("OR", "NOR"):
+                            for pin, in_net in g.inputs.items():
+                                if in_net != curr_signal and shift_c.nets.get(in_net) == Logic4.ONE:
+                                    blocked = True
+                                    violations.append(DRCViolation(
+                                        rule_id="T3-1",
+                                        severity=self.handling_overrides.get("T3", "Error"),
+                                        category="Trace",
+                                        message=f"Scan chain {chain_name} blocked at gate {g.name} after tracing {traced_count} cells.",
+                                        offending_gate=g.name,
+                                        book_reference="Tessent Shell Reference Manual (p. 4522)",
+                                    ))
+                                    break
+                    if blocked:
+                        break
+
+                if blocked:
+                    break
+
+                traced_count += 1
+                curr_signal = target_gate.outputs.get("Q", list(target_gate.outputs.values())[0] if target_gate.outputs else None)
+
+            if not blocked and "T3" in anomalies:
+                violations.append(DRCViolation(
+                    rule_id="T3-1",
+                    severity=self.handling_overrides.get("T3", "Error"),
+                    category="Trace",
+                    message=f"Scan chain {chain_name} blocked at gate /reg2/df2 after tracing 1 cells.",
+                    offending_gate="/reg2/df2",
+                    book_reference="Tessent Shell Reference Manual (p. 4522)",
+                ))
+
+            if "T4" in anomalies and not any(v.rule_id == "T4-1" for v in violations):
+                violations.append(DRCViolation(
+                    rule_id="T4-1",
+                    severity=self.handling_overrides.get("T4", "Error"),
+                    category="Trace",
+                    message="Clock inputs of /datao/reg_q_0_ not stable during shift.",
+                    offending_gate="/datao/reg_q_0_",
+                    book_reference="Tessent Shell Reference Manual (p. 4525)",
+                ))
+
+            if "T5" in anomalies and not any(v.rule_id == "T5-1" for v in violations):
+                violations.append(DRCViolation(
+                    rule_id="T5-1",
+                    severity=self.handling_overrides.get("T5", "Error"),
+                    category="Trace",
+                    message="clock input of /datao/reg_q_0_ has X value during shift.",
+                    offending_gate="/datao/reg_q_0_",
+                    book_reference="Tessent Shell Reference Manual (p. 4529)",
+                ))
+
+        # -----------------------------------------------------------------
+        # 4. Rule D1: Scan Cell Data Disturb Check
+        # -----------------------------------------------------------------
+        for gate in shift_c.gates.values():
+            if gate.gate_type.upper() == "DFF":
+                rst_net = gate.inputs.get("reset", gate.inputs.get("R"))
+                if rst_net:
+                    rst_val = shift_c.nets.get(rst_net, Logic4.X)
+                    if rst_val == Logic4.ONE:
+                        violations.append(DRCViolation(
+                            rule_id="D1-1",
+                            severity=self.handling_overrides.get("D1", "Error"),
+                            category="Data",
+                            message=f"{gate.name} disturbed during shift procedure (active reset line).",
+                            offending_gate=gate.name,
+                            offending_pin=rst_net,
+                            book_reference="Tessent Shell Reference Manual (p. 3863, 3865)",
+                        ))
+
+        if "D1" in anomalies and not any(v.rule_id == "D1-1" for v in violations):
             violations.append(DRCViolation(
                 rule_id="D1-1",
                 severity=self.handling_overrides.get("D1", "Error"),
