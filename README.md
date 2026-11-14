@@ -13,17 +13,14 @@ An educational Python-based EDA simulation environment modeling Siemens/Mentor *
    - Context switching (`set_context patterns -scan`) and system mode transitions (`setup` ⇄ `analysis`).
    - Verilog netlist loading, pin/clock constraints definition (`add_clocks`, `add_pin_constraints`).
    - Live Design Rule Checking (DRC) rule querying from the official Reference Manual using PyMuPDF.
-   - Built-in stuck-at fault injection (`add_faults -all`), pattern simulation, and fault coverage reporting (`report_statistics`).
+   - Demonstration stuck-at fault injection and coverage output. The current fault grading is not validated and must not be used to assess a design.
 
 2. **Deductive 4-State Logic Engine**:
    - Implements IEEE 1164 / Verilog 4-state logic algebra (`0`, `1`, `X`, `Z`) with proper propagation rules across combinational and sequential gates.
 
-3. **Ground-Truth DRC Verification Engine**:
-   - Built-in catalog indexing over 3,600 DRC rules directly mapped to page numbers in `tshell_ref.pdf`.
-   - Structural and pattern checking for core rules:
-     - **C1 / C2**: Clock off-state rules and clock reachability.
-     - **T3 / T4 / T5**: Scan chain trace rules (blocked at gates, clock violations during shift, X states on clocks).
-     - **D1**: Scan cell disturbed during shift / load-unload.
+3. **DRC Learning Examples**:
+   - A catalog of 600 entries mapped to pages in `tshell_ref.pdf`.
+   - Simplified C1/C2 checks and examples for T3/T4/T5/D1. The latter are not yet detected from the actual design; manual excerpts are illustrative, not design results.
 
 4. **Scan Chain Insertion & Fault Simulation**:
    - [insertion.py](file:///Users/phuccao/Workspace/tshell_sim_lab/insertion.py): Automatic multiplexed flip-flop scan chain stitching from high-level circuit specifications to synthesizable Verilog netlists.
@@ -35,7 +32,8 @@ An educational Python-based EDA simulation environment modeling Siemens/Mentor *
 
 ### Prerequisites
 - Python 3.9+ (tested on Python 3.10 – 3.14).
-- No external EDA tools or Docker required.
+- The Python lab does not require commercial EDA tools or Docker.
+- For the optional RTL simulations and RTL exercise tests, install Icarus Verilog (`iverilog` and `vvp`). On macOS with Homebrew: `brew install icarus-verilog`.
 
 ### 1. Create and Activate Virtual Environment
 ```bash
@@ -124,13 +122,15 @@ python3 -m unittest discover tests -v
 
 ## Golden Oracle & Manual Alignment
 
-The simulation logic is aligned with official reference manuals:
+The manuals inform the examples; command behavior and simulation are not yet fully aligned with them:
 - **`tshell_ref.pdf`**: *Tessent Shell Reference Manual* (v2026.2, Rev 43). Provides command syntax, argument structures, and DRC rule definitions.
 - **`tshell_user.pdf`**: *Tessent Shell User's Manual* (v2026.2). Defines the DFT methodology, ATPG flow, and coverage metrics:
   $$\text{Fault Coverage} = \frac{\text{Detected Faults}}{\text{Total Faults}} \times 100\%$$
   $$\text{Test Coverage} = \frac{\text{Detected Faults}}{\text{Total Faults} - \text{Untestable Faults}} \times 100\%$$
 
 For specific textbook case studies (T3, T4, T5, C1, D1), refer to [EXERCISES.md](file:///Users/phuccao/Workspace/tshell_sim_lab/EXERCISES.md).
+
+The current implementation is an educational subset, not a substitute for Tessent or production DRC/ATPG. See [the roadmap](docs/plans/2026-11-14-tshell-roadmap.md) for known gaps and validation criteria.
 
 ---
 
@@ -149,7 +149,7 @@ tshell_sim_lab/
 ├── tessent_core/               # Core EDA simulation engine
 │   ├── atpg.py                 # ATPG fault injection, simulation & statistics
 │   ├── drc.py                  # DRC rule evaluation & oracle reader
-│   ├── drc_catalog.json        # 3,600+ rule catalog mapped to manual pages
+│   ├── drc_catalog.json        # 600 catalog entries mapped to manual pages
 │   ├── logic4.py               # IEEE 1164 4-state logic algebra (0, 1, X, Z)
 │   ├── netlist.py              # Gate-level netlist and circuit graph model
 │   └── state.py                # Tessent session FSM (SETUP <-> ANALYSIS)

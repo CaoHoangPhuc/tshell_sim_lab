@@ -1,5 +1,7 @@
 import json
 import builtins
+import os
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -18,13 +20,8 @@ def cli(*args):
                           cwd=LAB, capture_output=True, text=True)
 
 
-def docker_available():
-    try:
-        return subprocess.run(['docker', 'image', 'inspect', 'tshell-sim-lab-rtl:local'],
-                              stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
-                              timeout=10).returncode == 0
-    except (OSError, subprocess.TimeoutExpired):
-        return False
+def icarus_available():
+    return shutil.which('iverilog') is not None and shutil.which('vvp') is not None
 
 
 class ExerciseTests(unittest.TestCase):
@@ -145,6 +142,16 @@ class ExerciseTests(unittest.TestCase):
             self.assertEqual(proc.returncode, 2)
             self.assertIn('Không tìm thấy', proc.stderr)
 
+    def test_legacy_run_explains_missing_icarus_tools(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            directory = Path(tmp)
+            (directory / 'design.v').write_text('module scan_chain; endmodule')
+            env = dict(os.environ, PATH=str(directory))
+            result = subprocess.run([sys.executable, str(SCRIPT), 'run', '--dir', str(directory)],
+                                    cwd=LAB, capture_output=True, text=True, env=env)
+            self.assertEqual(result.returncode, 2)
+            self.assertIn('iverilog', result.stderr.lower())
+
     def test_invalid_manifest_does_not_silently_run_legacy_mode(self):
         with tempfile.TemporaryDirectory() as tmp:
             directory = Path(tmp)
@@ -153,7 +160,7 @@ class ExerciseTests(unittest.TestCase):
             result = cli('run', '--dir', directory)
             self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
 
-    @unittest.skipUnless(docker_available(), 'Docker image not available')
+    @unittest.skipUnless(icarus_available(), 'Icarus Verilog not available')
     def test_fixtures_show_documented_symptoms_and_repair(self):
         sys.path.insert(0, str(LAB))
         import exercises
@@ -184,7 +191,7 @@ class ExerciseTests(unittest.TestCase):
                     self.assertEqual(fixed.returncode, 0, fixed.stdout + fixed.stderr)
                     self.assertIn('completed without mismatch', fixed.stdout)
 
-    @unittest.skipUnless(docker_available(), 'Docker image not available')
+    @unittest.skipUnless(icarus_available(), 'Icarus Verilog not available')
     def test_compile_error_is_reported_as_compile_error(self):
         with tempfile.TemporaryDirectory() as tmp:
             directory = Path(tmp) / 'exercise'
@@ -196,7 +203,7 @@ class ExerciseTests(unittest.TestCase):
             self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
             self.assertIn('compile', (result.stdout + result.stderr).lower())
 
-    @unittest.skipUnless(docker_available(), 'Docker image not available')
+    @unittest.skipUnless(icarus_available(), 'Icarus Verilog not available')
     def test_legacy_case_uses_original_testbench(self):
         sys.path.insert(0, str(LAB))
         from insertion import EXAMPLE, insert_scan

@@ -5,14 +5,15 @@ from __future__ import annotations
 import argparse
 import json
 import shlex
+import shutil
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 LAB = Path(__file__).resolve().parent
 LEGACY_TESTBENCH = LAB / 'rtl' / 'tb_exercise.v'
 DOCUMENT_TESTBENCH = LAB / 'rtl' / 'tb_document_cases.v'
-IMAGE = 'tshell-sim-lab-rtl:local'
 LEGACY_FORMAT = 'document-shift-v1'
 FORMAT = 'book-replay-v1'
 REFERENCE = (LAB / 'tshell_ref.pdf') if (LAB / 'tshell_ref.pdf').is_file() else (LAB.parent / 'tshell_ref.pdf')
@@ -185,52 +186,41 @@ def run(directory: Path) -> int:
     if any(not path.is_file() for path in sources):
         print('Không tìm thấy file bài hoặc testbench của lab.', file=sys.stderr)
         return 2
-    paths = [p.resolve() for p in sources]
-    if any(':' in str(path) for path in paths):
-        print('Đường dẫn chứa dấu : không được Docker hỗ trợ trong lab này.', file=sys.stderr)
+    missing = [tool for tool in ('iverilog', 'vvp') if shutil.which(tool) is None]
+    if missing:
+        print(f'Thiếu Icarus Verilog ({", ".join(missing)}). Cài iverilog và vvp để chạy bài RTL.', file=sys.stderr)
         return 2
     try:
-        image = subprocess.run(['docker', 'image', 'inspect', IMAGE],
-                               stdout=subprocess.DEVNULL, stderr=subprocess.PIPE,
-                               text=True, timeout=20)
-        if image.returncode:
-            print('Không tìm thấy Docker image hoặc Docker chưa chạy. Chạy ./rtl/run_docker.sh để chuẩn bị môi trường.', file=sys.stderr)
-            if image.stderr:
-                print(image.stderr, file=sys.stderr, end='')
-            return 2
-        command = ['docker', 'run', '--rm', '--pull=never', '--network', 'none',
-                   '--read-only', '--tmpfs', '/tmp:rw,nosuid,size=64m',
-                   '-v', f'{design.resolve()}:/submission/design.v:ro',
-                   '-v', f'{testbench.resolve()}:/reference/tb.v:ro']
-        if mode == 'document':
-            command += ['-v', f'{procedure.resolve()}:/submission/procedure.vh:ro']
-            compile_cmd = 'iverilog -g2012 -I/submission -s tb_document_cases -o /tmp/sim /reference/tb.v /submission/design.v'
-        else:
-            compile_cmd = 'iverilog -g2012 -s tb_scan_demo -o /tmp/sim /reference/tb.v /submission/design.v'
-        command += [IMAGE, 'sh', '-c', f'{compile_cmd} || exit 42; vvp /tmp/sim || exit 43']
-        result = subprocess.run(command, capture_output=True, text=True, timeout=60)
+        with tempfile.TemporaryDirectory(prefix='tshell-rtl-') as tmp:
+            executable = Path(tmp) / 'simulation'
+            top = 'tb_document_cases' if mode == 'document' else 'tb_scan_demo'
+            command = ['iverilog', '-g2012', '-I', str(directory.resolve()), '-s', top,
+                       '-o', str(executable), str(testbench.resolve()), str(design.resolve())]
+            compiled = subprocess.run(command, cwd=tmp, capture_output=True, text=True, timeout=60)
+            if compiled.stdout:
+                print(compiled.stdout, end='')
+            if compiled.stderr:
+                print(compiled.stderr, end='', file=sys.stderr)
+            if compiled.returncode:
+                print('Lỗi compile Verilog; xem thông báo phía trên.', file=sys.stderr)
+                return 1
+            result = subprocess.run(['vvp', str(executable)], cwd=tmp, capture_output=True, text=True, timeout=60)
     except FileNotFoundError:
-        print('Không tìm thấy Docker; cần Docker Desktop và image của lab.', file=sys.stderr)
+        print('Không tìm thấy iverilog hoặc vvp; cài Icarus Verilog để chạy bài RTL.', file=sys.stderr)
         return 2
     except subprocess.TimeoutExpired:
-        print('Quá thời gian chạy: kiểm tra Docker và mô phỏng.', file=sys.stderr)
+        print('Quá thời gian compile hoặc mô phỏng RTL.', file=sys.stderr)
         return 2
     except OSError as exc:
-        print(f'Không thể khởi động Docker: {exc}', file=sys.stderr)
+        print(f'Không thể chạy công cụ RTL: {exc}', file=sys.stderr)
         return 2
     if result.stdout:
         print(result.stdout, end='')
     if result.stderr:
         print(result.stderr, end='', file=sys.stderr)
-    if result.returncode == 42:
-        print('Lỗi compile Verilog; xem thông báo phía trên.', file=sys.stderr)
-        return 1
-    if result.returncode == 43:
+    if result.returncode != 0:
         print('Mô phỏng báo lỗi; xem kết quả phía trên.', file=sys.stderr)
         return 1
-    if result.returncode != 0:
-        print(f'Không chạy được môi trường Docker (mã {result.returncode}).', file=sys.stderr)
-        return 2
     return 0
 
 
