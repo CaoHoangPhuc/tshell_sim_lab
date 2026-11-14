@@ -147,6 +147,37 @@ class ReferenceBookTestUnits(unittest.TestCase):
         self.assertGreaterEqual(stats.test_coverage, 0.0)
         self.assertLessEqual(stats.test_coverage, 100.0)
 
+    def test_masked_fault_is_not_detected(self):
+        """Verify that a masked/unobservable fault is graded as ND and not falsely marked DS."""
+        atpg = ATPGEngine()
+        circuit = CircuitGraph("masked_circuit")
+        circuit.add_port("clk", "in")
+        circuit.add_port("scan_in", "in")
+        circuit.add_port("scan_en", "in")
+        circuit.add_port("scan_out", "out")
+        circuit.add_port("unconnected_in", "in")  # Primary input that drives nothing
+        circuit.add_gate(Gate("dff_q0", "DFF", inputs={"clk": "clk", "d": "scan_in"}, outputs={"Q": "q0"}))
+        circuit.add_gate(Gate("dff_q1", "DFF", inputs={"clk": "clk", "d": "q0"}, outputs={"Q": "scan_out"}))
+
+        atpg.populate_stuck_at_faults(circuit)
+        # Test pattern that shifts through scan chain
+        stats = atpg.simulate_test_patterns(circuit, test_patterns=[
+            {"shift_in": [0, 1]},
+            {"shift_in": [1, 0]},
+        ])
+
+        # Faults on unconnected_in must NEVER be detected (ND) because they have no path to output
+        unconnected_sa0 = atpg.faults.get("unconnected_in/SA0")
+        unconnected_sa1 = atpg.faults.get("unconnected_in/SA1")
+        self.assertIsNotNone(unconnected_sa0)
+        self.assertIsNotNone(unconnected_sa1)
+        self.assertEqual(unconnected_sa0.status, FaultClass.ND)
+        self.assertEqual(unconnected_sa1.status, FaultClass.ND)
+
+        # Faults on scan_in should be detected (DS)
+        scan_in_sa0 = atpg.faults.get("scan_in/SA0")
+        self.assertEqual(scan_in_sa0.status, FaultClass.DS)
+
 
 if __name__ == "__main__":
     unittest.main()

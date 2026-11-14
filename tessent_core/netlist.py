@@ -97,6 +97,44 @@ class CircuitGraph:
         self.gates: dict[str, Gate] = {}
         self.nets: dict[str, Logic4] = {}  # net_name -> current value
         self.scan_cells: list[str] = []  # Names of DFF gates in scan chains
+        self.forced_nets: dict[str, Logic4] = {}  # Injected stuck-at fault overrides
+
+    def clone(self) -> CircuitGraph:
+        """Create an isolated, deep replica of the circuit graph with independent state."""
+        new_cg = CircuitGraph(name=self.name)
+        new_cg.primary_inputs = set(self.primary_inputs)
+        new_cg.primary_outputs = set(self.primary_outputs)
+        new_cg.scan_cells = list(self.scan_cells)
+        new_cg.nets = dict(self.nets)
+        new_cg.forced_nets = dict(self.forced_nets)
+        for gname, g in self.gates.items():
+            new_g = Gate(
+                name=g.name,
+                gate_type=g.gate_type,
+                inputs=dict(g.inputs),
+                outputs=dict(g.outputs),
+                internal_state=g.internal_state,
+                fault_forced_value=g.fault_forced_value,
+            )
+            new_cg.gates[gname] = new_g
+        return new_cg
+
+    def inject_fault(self, node: str, val: Logic4) -> None:
+        """Inject a permanent stuck-at fault on a node, net, or gate output."""
+        self.forced_nets[node] = val
+        self.nets[node] = val
+        # If node directly names a gate or output net of a gate
+        for gate in self.gates.values():
+            if gate.name == node or node in gate.outputs.values():
+                gate.fault_forced_value = val
+        self.propagate_combinational()
+
+    def clear_faults(self) -> None:
+        """Remove all injected stuck-at faults."""
+        self.forced_nets.clear()
+        for gate in self.gates.values():
+            gate.fault_forced_value = None
+        self.propagate_combinational()
 
     def add_port(self, name: str, direction: str) -> None:
         if direction == "in":
@@ -120,7 +158,9 @@ class CircuitGraph:
 
     def set_primary_input(self, name: str, value: Logic4 | str | int) -> None:
         val = Logic4.from_val(value)
-        if name in self.primary_inputs or name in self.nets:
+        if name in self.forced_nets:
+            self.nets[name] = self.forced_nets[name]
+        elif name in self.primary_inputs or name in self.nets:
             self.nets[name] = val
 
     def propagate_combinational(self) -> None:
@@ -131,12 +171,21 @@ class CircuitGraph:
         while changed and iterations < max_iters:
             changed = False
             iterations += 1
+
+            # Re-enforce forced stuck-at nets
+            for f_net, f_val in self.forced_nets.items():
+                if self.nets.get(f_net) != f_val:
+                    self.nets[f_net] = f_val
+                    changed = True
+
             for gate in self.gates.values():
                 if gate.gate_type.upper() == "DFF":
                     # Output of DFF is driven by internal state
                     out_net = gate.outputs.get("Q", list(gate.outputs.values())[0] if gate.outputs else None)
                     if out_net:
-                        val = gate.fault_forced_value or gate.internal_state
+                        val = gate.fault_forced_value if gate.fault_forced_value is not None else gate.internal_state
+                        if out_net in self.forced_nets:
+                            val = self.forced_nets[out_net]
                         if self.nets.get(out_net) != val:
                             self.nets[out_net] = val
                             changed = True
@@ -145,35 +194,49 @@ class CircuitGraph:
                 in_vals = {pin: self.nets.get(net, Logic4.X) for pin, net in gate.inputs.items()}
                 out_val = gate.evaluate_output(in_vals)
                 for out_net in gate.outputs.values():
-                    if self.nets.get(out_net) != out_val:
-                        self.nets[out_net] = out_val
+                    final_val = self.forced_nets.get(out_net, out_val)
+                    if self.nets.get(out_net) != final_val:
+                        self.nets[out_net] = final_val
                         changed = True
 
     def clock_edge(self, clock_pin: str = "clk", active_edge: str = "pos") -> None:
-        """Evaluate memory element updates on active clock edge."""
+        """Synchronously evaluate and update memory elements on active clock edge (double-buffering)."""
+        # Pulse clock to active high if not forced
+        if clock_pin not in self.forced_nets:
+            self.nets[clock_pin] = Logic4.ONE
+
+        # Step 1: Ensure combinational nets are settled prior to clock edge
         self.propagate_combinational()
-        updates = {}
+
+        # Step 2: Sample all DFF inputs synchronously at time t
+        updates: dict[str, Logic4] = {}
         for gate in self.gates.values():
             if gate.gate_type.upper() == "DFF":
-                # Check clock pin
                 gate_clk_net = gate.inputs.get("clk", gate.inputs.get("CLK", "clk"))
                 gate_clk_val = self.nets.get(gate_clk_net, Logic4.X)
-                # D input
+
                 d_net = gate.inputs.get("d", gate.inputs.get("D", list(gate.inputs.values())[0] if gate.inputs else None))
                 d_val = self.nets.get(d_net, Logic4.X) if d_net else Logic4.X
 
-                # Reset check (synchronous or asynchronous active high reset)
                 reset_net = gate.inputs.get("reset", gate.inputs.get("R", None))
-                if reset_net and self.nets.get(reset_net) == Logic4.ONE:
+                reset_val = self.nets.get(reset_net) if reset_net else Logic4.ZERO
+
+                if reset_val == Logic4.ONE:
                     updates[gate.name] = Logic4.ZERO
                 elif gate_clk_val == Logic4.ONE:
                     updates[gate.name] = d_val
                 elif gate_clk_val == Logic4.X:
                     updates[gate.name] = Logic4.X
 
+        # Step 3: Concurrently latch states at time t+1
         for gate_name, new_val in updates.items():
             self.gates[gate_name].internal_state = new_val
 
+        # Return clock to off-state (0) unless forced
+        if clock_pin not in self.forced_nets:
+            self.nets[clock_pin] = Logic4.ZERO
+
+        # Step 4: Settle network post-latch
         self.propagate_combinational()
 
 
@@ -213,16 +276,17 @@ def parse_verilog_netlist(text: str) -> CircuitGraph:
         target = target.strip()
         expr = expr.strip()
         # Simple signal alias
-        if re.fullmatch(r"[A-Za-z0-9_]+", expr):
-            graph.add_gate(Gate(name=f"buf_{target}", gate_type="BUF", inputs={"in": expr}, outputs={"out": target}))
+        clean_expr = expr.strip().strip("()")
+        if re.fullmatch(r"[A-Za-z0-9_]+", clean_expr):
+            graph.add_gate(Gate(name=f"buf_{target}", gate_type="BUF", inputs={"in": clean_expr}, outputs={"out": target}))
         elif "^" in expr:
-            parts = [p.strip() for p in expr.split("^")]
+            parts = [p.strip().strip("()") for p in expr.split("^")]
             graph.add_gate(Gate(name=f"xor_{target}", gate_type="XOR", inputs={"a": parts[0], "b": parts[1]}, outputs={"out": target}))
         elif "&" in expr:
-            parts = [p.strip() for p in expr.split("&")]
+            parts = [p.strip().strip("()") for p in expr.split("&")]
             graph.add_gate(Gate(name=f"and_{target}", gate_type="AND", inputs={"a": parts[0], "b": parts[1]}, outputs={"out": target}))
         elif "|" in expr:
-            parts = [p.strip() for p in expr.split("|")]
+            parts = [p.strip().strip("()") for p in expr.split("|")]
             graph.add_gate(Gate(name=f"or_{target}", gate_type="OR", inputs={"a": parts[0], "b": parts[1]}, outputs={"out": target}))
 
     # If scan chain pattern (q0 <= scan_in; q1 <= q0; etc.)
