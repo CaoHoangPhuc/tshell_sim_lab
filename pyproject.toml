@@ -42,10 +42,11 @@ py-modules = ["tshell", "exercises", "insertion", "scan_sim"]
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["tessent_core*"]
+include = ["tessent_core*", "rtl*"]
 
 [tool.setuptools.package-data]
 tessent_core = ["*.json"]
+rtl = ["*.v", "*.vh"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

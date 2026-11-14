@@ -47,52 +47,119 @@ class ATPGStatistics:
     test_coverage: float = 0.0
 
 
+def find_pin(candidates: tuple[str, ...], available: set[str] | list[str]) -> str | None:
+    avail_map = {p.lower(): p for p in available}
+    for c in candidates:
+        if c.lower() in avail_map:
+            return avail_map[c.lower()]
+    return None
+
+
+def get_control_pins(circuit: CircuitGraph) -> dict[str, str | None]:
+    clk_pin = None
+    reset_pin = None
+    scan_en_pin = None
+    scan_in_pin = None
+    scan_out_pin = None
+
+    for g in circuit.gates.values():
+        if g.gate_type.upper() == "DFF":
+            if not clk_pin and "clk" in g.inputs and g.inputs["clk"] in circuit.primary_inputs:
+                clk_pin = g.inputs["clk"]
+            if not reset_pin and "reset" in g.inputs and g.inputs["reset"] in circuit.primary_inputs:
+                reset_pin = g.inputs["reset"]
+        elif g.gate_type.upper() == "IFMUX":
+            if not scan_en_pin and "sel" in g.inputs and g.inputs["sel"] in circuit.primary_inputs:
+                scan_en_pin = g.inputs["sel"]
+
+    if not clk_pin:
+        clk_pin = find_pin(("clk", "clock", "ck"), circuit.primary_inputs) or "clk"
+    if not reset_pin:
+        reset_pin = find_pin(("reset", "rst", "rst_n", "reset_n"), circuit.primary_inputs)
+    if not scan_en_pin:
+        scan_en_pin = find_pin(("scan_en", "se", "scan_enable", "scanenable", "shift_en"), circuit.primary_inputs)
+    if not scan_in_pin:
+        scan_in_pin = find_pin(("scan_in", "si", "sin", "scanin"), circuit.primary_inputs)
+    if not scan_out_pin:
+        scan_out_pin = find_pin(("scan_out", "so", "sout", "scanout"), circuit.primary_outputs)
+
+    return {
+        "clk": clk_pin,
+        "reset": reset_pin,
+        "scan_en": scan_en_pin,
+        "scan_in": scan_in_pin,
+        "scan_out": scan_out_pin,
+    }
+
+
 def execute_test_pattern(
     circuit: CircuitGraph,
     pat: dict[str, Any],
 ) -> tuple[dict[str, Logic4], list[Logic4]]:
     """Execute one scan test pattern: Reset -> Shift-in (Load) -> Capture -> Shift-out (Unload)."""
+    ctrl = get_control_pins(circuit)
+    clk = ctrl["clk"] or "clk"
+    reset = ctrl["reset"]
+    scan_en = ctrl["scan_en"]
+    scan_in = ctrl["scan_in"]
+    scan_out = ctrl["scan_out"]
+
     # 1. Reset circuit to clean slate if reset port exists
-    if "reset" in circuit.primary_inputs:
-        circuit.set_primary_input("reset", 1)
-        circuit.clock_edge("clk")
-        circuit.set_primary_input("reset", 0)
+    if reset and reset in circuit.primary_inputs:
+        circuit.set_primary_input(reset, 1)
+        circuit.clock_edge(clk)
+        circuit.set_primary_input(reset, 0)
 
     # 2. Shift-in (Load)
     shift_bits = pat.get("shift_in", [])
-    if shift_bits and "scan_en" in circuit.primary_inputs and "scan_in" in circuit.primary_inputs:
-        circuit.set_primary_input("scan_en", 1)
+    if shift_bits and scan_en and scan_in and scan_en in circuit.primary_inputs and scan_in in circuit.primary_inputs:
+        circuit.set_primary_input(scan_en, 1)
         for b in shift_bits:
-            circuit.set_primary_input("scan_in", b)
-            circuit.clock_edge("clk")
+            circuit.set_primary_input(scan_in, b)
+            circuit.clock_edge(clk)
 
     # 3. Capture: Force PIs and pulse clock
-    if "scan_en" in circuit.primary_inputs:
-        circuit.set_primary_input("scan_en", 0)
+    if scan_en and scan_en in circuit.primary_inputs:
+        circuit.set_primary_input(scan_en, 0)
 
-    data_pis = [p for p in circuit.primary_inputs if p not in ("clk", "reset", "scan_en", "scan_in")]
+    known_ctrl = {p for p in (clk, reset, scan_en, scan_in) if p is not None}
+    data_pis = [p for p in circuit.primary_inputs if p not in known_ctrl]
     for pi in data_pis:
         if pi in pat:
             circuit.set_primary_input(pi, pat[pi])
 
     circuit.propagate_combinational()
 
-    # Strobe Primary Outputs right before capture clock
-    obs_pos = {po: circuit.nets.get(po, Logic4.X) for po in circuit.primary_outputs if po != "scan_out"}
+    # Strobe Primary Outputs before capture clock (observes combinational PI->PO paths)
+    obs_pos: dict[str, Logic4] = {}
+    for po in circuit.primary_outputs:
+        if po != scan_out:
+            pre_val = circuit.nets.get(po, Logic4.X)
+            obs_pos[f"{po}@pre"] = pre_val
+            obs_pos[po] = pre_val
 
     # Capture pulse
-    circuit.clock_edge("clk")
+    circuit.clock_edge(clk)
+    circuit.propagate_combinational()
+
+    # Strobe Primary Outputs after capture clock (observes sequential / flop-captured values on POs)
+    for po in circuit.primary_outputs:
+        if po != scan_out:
+            post_val = circuit.nets.get(po, Logic4.X)
+            obs_pos[f"{po}@post"] = post_val
+            obs_pos[po] = post_val
 
     # 4. Shift-out (Unload)
     obs_scan_out: list[Logic4] = []
     scan_len = len(circuit.scan_cells) if circuit.scan_cells else len(shift_bits)
-    if scan_len > 0 and "scan_out" in circuit.primary_outputs and "scan_en" in circuit.primary_inputs:
-        circuit.set_primary_input("scan_en", 1)
-        circuit.set_primary_input("scan_in", 0)
+    if scan_len > 0 and scan_out and scan_en and scan_out in circuit.primary_outputs and scan_en in circuit.primary_inputs:
+        circuit.set_primary_input(scan_en, 1)
+        if scan_in and scan_in in circuit.primary_inputs:
+            circuit.set_primary_input(scan_in, 0)
         circuit.propagate_combinational()
         for _ in range(scan_len):
-            obs_scan_out.append(circuit.nets.get("scan_out", Logic4.X))
-            circuit.clock_edge("clk")
+            obs_scan_out.append(circuit.nets.get(scan_out, Logic4.X))
+            circuit.clock_edge(clk)
             circuit.propagate_combinational()
 
     return obs_pos, obs_scan_out
@@ -116,8 +183,10 @@ class ATPGEngine:
 
     def create_patterns(self, circuit: CircuitGraph) -> list[dict[str, Any]]:
         """Synthesize deterministic ATPG test patterns for the given circuit."""
+        ctrl = get_control_pins(circuit)
+        known_ctrl = {p for p in (ctrl["clk"], ctrl["reset"], ctrl["scan_en"], ctrl["scan_in"]) if p is not None}
         scan_len = len(circuit.scan_cells)
-        pi_names = [pi for pi in sorted(circuit.primary_inputs) if pi not in ("clk", "scan_en", "scan_in", "reset")]
+        pi_names = [pi for pi in sorted(circuit.primary_inputs) if pi not in known_ctrl]
 
         patterns: list[dict[str, Any]] = []
 

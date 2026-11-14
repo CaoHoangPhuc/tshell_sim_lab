@@ -108,3 +108,57 @@ def test_batch_file_and_verilog_paths_support_spaces(tmp_path):
     p = run('-f', str(dofile), cwd=tmp_path)
     assert p.returncode == 0, p.stdout
     assert 'Design name: relative' in p.stdout
+
+
+def test_add_faults_clears_stale_statistics():
+    shell = TessentShell()
+    shell.onecmd(f"read_verilog {ROOT / 'examples/serial_adder_scan.v'}")
+    shell.onecmd("add_clocks 0 clk")
+    shell.onecmd("set_system_mode analysis")
+    shell.onecmd("add_faults -all")
+    shell.onecmd("create_patterns")
+    shell.onecmd("simulate_patterns")
+    assert shell.fsm.simulation_done
+    assert shell.fsm.last_statistics.test_coverage > 0
+
+    # Now add_faults again - should invalidate stale statistics
+    shell.onecmd("add_faults -all")
+    assert not shell.fsm.simulation_done
+    assert shell.fsm.last_statistics.total_faults == 0
+
+    buf = io.StringIO()
+    with contextlib.redirect_stdout(buf):
+        shell.onecmd("report_statistics")
+    assert "No fault simulation statistics available" in buf.getvalue()
+
+
+def test_delete_clocks_clears_stale_drc_violations():
+    shell = TessentShell()
+    shell.fsm.last_drc_violations = [DRCViolation('C1-1', 'Error', 'Clock', 'FAILED')]
+    shell.fsm.clocks['clk'] = None
+
+    shell.onecmd("delete_clocks -all")
+    assert len(shell.fsm.last_drc_violations) == 0
+
+    buf = io.StringIO()
+    with contextlib.redirect_stdout(buf):
+        shell.onecmd("report_drc_rules c1-1")
+    assert "Active Violations on Current Design" not in buf.getvalue()
+
+
+def test_report_architecture_checks_loaded_design():
+    shell = TessentShell()
+    buf = io.StringIO()
+    with contextlib.redirect_stdout(buf):
+        shell.onecmd("report_architecture")
+    assert "No design loaded" in buf.getvalue()
+    assert shell.failed
+
+    shell2 = TessentShell()
+    shell2.onecmd(f"read_verilog {ROOT / 'examples/serial_adder_scan.v'}")
+    buf2 = io.StringIO()
+    with contextlib.redirect_stdout(buf2):
+        shell2.onecmd("report_architecture")
+    out = buf2.getvalue()
+    assert "Top Module:             serial_adder_scan" in out
+    assert "None detected in gate netlist" in out
