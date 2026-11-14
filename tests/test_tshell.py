@@ -38,7 +38,7 @@ class TessentShellTests(unittest.TestCase):
             dofile.write_text(
                 "// Test Dofile\n"
                 "set_context patterns -scan\n"
-                "read_verilog output/serial_adder_scan.v\n"
+                "read_verilog examples/serial_adder_scan.v\n"
                 "report_design\n"
                 "set_system_mode analysis\n"
                 "report_drc_rules\n",
@@ -59,7 +59,7 @@ class TessentShellTests(unittest.TestCase):
 
     def test_atpg_pattern_generation_and_reporting(self):
         cmd = (
-            "read_verilog output/serial_adder_scan.v; "
+            "read_verilog examples/serial_adder_scan.v; "
             "add_clocks 0 clk; "
             "set_system_mode analysis; "
             "add_faults -all; "
@@ -76,7 +76,7 @@ class TessentShellTests(unittest.TestCase):
 
     def test_positional_clock_and_hierarchical_gate_reporting(self):
         cmd = (
-            "read_verilog output/serial_adder_scan.v; "
+            "read_verilog examples/serial_adder_scan.v; "
             "add_clocks 0 clk; "
             "report_clocks; "
             "report_gate /serial_adder_scan/dff_q0"
@@ -85,6 +85,61 @@ class TessentShellTests(unittest.TestCase):
         self.assertEqual(proc.returncode, 0, proc.stderr)
         self.assertIn("clk             0", proc.stdout)
         self.assertIn("Gate: dff_q0 (DFF)", proc.stdout)
+
+    def test_write_tsdb_prevents_overwrite_without_replace(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            tsdb_dir = Path(tmp) / "tsdb_test"
+            cmd1 = (
+                f"read_verilog examples/serial_adder_scan.v; "
+                f"set_tsdb_output_directory {tsdb_dir}; "
+                f"write_tsdb_data"
+            )
+            proc1 = run_tshell("-c", cmd1)
+            self.assertEqual(proc1.returncode, 0, proc1.stderr)
+            self.assertIn("TSDB synchronization complete", proc1.stdout)
+
+            # Second write without -replace must fail/refuse to overwrite
+            cmd2 = (
+                f"read_verilog examples/serial_adder_scan.v; "
+                f"set_tsdb_output_directory {tsdb_dir}; "
+                f"write_tsdb_data"
+            )
+            proc2 = run_tshell("-c", cmd2)
+            self.assertIn("already exists", proc2.stdout)
+
+            # Write with -replace must succeed
+            cmd3 = (
+                f"read_verilog examples/serial_adder_scan.v; "
+                f"set_tsdb_output_directory {tsdb_dir}; "
+                f"write_tsdb_data -replace"
+            )
+            proc3 = run_tshell("-c", cmd3)
+            self.assertIn("TSDB synchronization complete", proc3.stdout)
+
+    def test_report_drc_rules_shows_active_violations_alongside_excerpt(self):
+        # Circuit with active C2 violation: floating clock that drives no DFF
+        with tempfile.TemporaryDirectory() as tmp:
+            circuit_file = Path(tmp) / "floating_clk.v"
+            circuit_file.write_text(
+                "module floating_clk(clk, float_clk, a, q);\n"
+                "  input clk, float_clk, a;\n"
+                "  output q;\n"
+                "  reg q;\n"
+                "  always @(posedge clk) q <= a;\n"
+                "endmodule\n"
+            )
+            cmd = (
+                f"read_verilog {circuit_file}; "
+                f"add_clocks 0 clk float_clk; "
+                f"set_system_mode analysis; "
+                f"report_drc_rules c2"
+            )
+            proc = run_tshell("-c", cmd)
+            self.assertEqual(proc.returncode, 0, proc.stderr)
+            # Must show BOTH the active violation on current design AND the manual excerpt!
+            self.assertIn("Active Violations on Current Design", proc.stdout)
+            self.assertIn("Clock float_clk cannot reach", proc.stdout)
+            self.assertIn("DRC Rule Excerpt", proc.stdout)
 
 
 if __name__ == "__main__":

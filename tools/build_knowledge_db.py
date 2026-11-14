@@ -71,7 +71,12 @@ CASES_METADATA = {
 }
 
 
-def build_database(pdf_path: Path, catalog_path: Path, output_path: Path) -> int:
+def build_database(
+    pdf_path: Path,
+    catalog_path: Path,
+    output_path: Path,
+    include_page_text: bool = False,
+) -> int:
     try:
         import pymupdf
     except ImportError:
@@ -130,7 +135,7 @@ def build_database(pdf_path: Path, catalog_path: Path, output_path: Path) -> int
             "last_page": info["pdf_pages"][-1],
             "excerpt": excerpt,
             "commands": commands_map,
-            "page_texts": page_texts,
+            "page_texts": page_texts if include_page_text else {},
         }
 
     # Enrich core rules with summaries
@@ -161,9 +166,10 @@ def main() -> int:
     parser.add_argument("--pdf", type=Path, default=DEFAULT_PDF, help="Path to tshell_ref.pdf")
     parser.add_argument("--catalog", type=Path, default=CATALOG_PATH, help="Path to drc_catalog.json")
     parser.add_argument("--output", type=Path, default=OUTPUT_DB, help="Output path for knowledge_db.json")
+    parser.add_argument("--include-page-text", action="store_true", help="Include full verbatim page text for local study")
     args = parser.parse_args()
 
-    return build_database(args.pdf, args.catalog, args.output)
+    return build_database(args.pdf, args.catalog, args.output, include_page_text=args.include_page_text)
 
 
 if __name__ == "__main__":

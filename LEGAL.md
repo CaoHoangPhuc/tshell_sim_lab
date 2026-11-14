@@ -30,7 +30,7 @@ The commands emulated in `tshell.py` (such as `set_context`, `read_verilog`, `ad
 This project satisfies all four statutory fair use factors under **17 U.S.C. § 107**:
 1. **Purpose and Character of the Use**: Non-profit, non-commercial, transformative, and strictly educational.
 2. **Nature of the Copyrighted Work**: Factual, functional reference material describing tool operation.
-3. **Amount and Substantiality Used**: No creative prose, proprietary graphics, or documentation manuals are distributed. Only functional rule IDs (e.g., `C1`, `T3`) and bibliographic page citations are referenced.
+3. **Amount and Substantiality Used**: No creative prose, proprietary graphics, or complete manual pages are distributed in this repository. Only functional rule IDs (e.g., `C1`, `T3`), bibliographic page citations, and minimal functional error message strings necessary for tool interoperability and DRC inference are indexed into `knowledge_db.json`.
 4. **Effect on the Market**: This educational simulator poses zero market harm to Siemens. It cannot replace Tessent™ licenses, does not support commercial cell libraries or multi-million gate ASICs, and rather serves to educate aspiring hardware and test engineers in DFT fundamentals.
 
 ---
@@ -38,7 +38,7 @@ This project satisfies all four statutory fair use factors under **17 U.S.C. § 
 ## 3. Zero-Asset Policy (No Redistribution of Proprietary Materials)
 
 This repository strictly enforces a **Zero-Asset Policy**:
-- **NO PDF Manuals**: The reference manuals (`tshell_ref.pdf`, `tshell_user.pdf`) are explicitly excluded via `.gitignore` and are not distributed or hosted on this repository.
+- **NO PDF Manuals or Verbatim Documentation**: The reference manuals (`tshell_ref.pdf`, `tshell_user.pdf`) are explicitly excluded via `.gitignore` and are not distributed or hosted on this repository. The pre-indexed database contains strictly factual metadata, rule codes, and command walkthroughs. Licensed users may optionally ingest full page texts offline for local private study via `tools/build_knowledge_db.py --include-page-text`.
 - **NO Cell Libraries**: No proprietary foundry or commercial standard cell libraries (e.g., TSMC, Samsung, Nangate, Synopsys) are packaged or required.
 - **Generic Benchmarks**: All Verilog modules and circuit graph representations represent generic academic circuits (e.g., serial adder toy circuit).
 

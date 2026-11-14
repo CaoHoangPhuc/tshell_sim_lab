@@ -79,8 +79,8 @@ class Gate:
             return not4(res)
         if gt == "MUX":
             sel = in_values.get("sel", in_values.get("scan_en", Logic4.ZERO))
-            d0 = in_values.get("d0", in_values.get("d", Logic4.X))
-            d1 = in_values.get("d1", in_values.get("scan_in", Logic4.X))
+            d0 = in_values.get("d0", in_values.get("in0", in_values.get("d", Logic4.X)))
+            d1 = in_values.get("d1", in_values.get("in1", in_values.get("scan_in", Logic4.X)))
             return mux21(sel, d0, d1)
         if gt == "DFF":
             return self.internal_state
@@ -201,9 +201,10 @@ class CircuitGraph:
 
     def clock_edge(self, clock_pin: str = "clk", active_edge: str = "pos") -> None:
         """Synchronously evaluate and update memory elements on active clock edge (double-buffering)."""
-        # Pulse clock to active high if not forced
-        if clock_pin not in self.forced_nets:
-            self.nets[clock_pin] = Logic4.ONE
+        # If the primary clock pin itself is forced (stuck-at), no dynamic clock transition occurs!
+        if clock_pin in self.forced_nets:
+            self.propagate_combinational()
+            return
 
         # Step 1: Ensure combinational nets are settled prior to clock edge
         self.propagate_combinational()
@@ -213,7 +214,9 @@ class CircuitGraph:
         for gate in self.gates.values():
             if gate.gate_type.upper() == "DFF":
                 gate_clk_net = gate.inputs.get("clk", gate.inputs.get("CLK", "clk"))
-                gate_clk_val = self.nets.get(gate_clk_net, Logic4.X)
+                # If gate's clock net is forced stuck-at, it cannot toggle
+                if gate_clk_net in self.forced_nets:
+                    continue
 
                 d_net = gate.inputs.get("d", gate.inputs.get("D", list(gate.inputs.values())[0] if gate.inputs else None))
                 d_val = self.nets.get(d_net, Logic4.X) if d_net else Logic4.X
@@ -223,18 +226,12 @@ class CircuitGraph:
 
                 if reset_val == Logic4.ONE:
                     updates[gate.name] = Logic4.ZERO
-                elif gate_clk_val == Logic4.ONE:
+                else:
                     updates[gate.name] = d_val
-                elif gate_clk_val == Logic4.X:
-                    updates[gate.name] = Logic4.X
 
         # Step 3: Concurrently latch states at time t+1
         for gate_name, new_val in updates.items():
             self.gates[gate_name].internal_state = new_val
-
-        # Return clock to off-state (0) unless forced
-        if clock_pin not in self.forced_nets:
-            self.nets[clock_pin] = Logic4.ZERO
 
         # Step 4: Settle network post-latch
         self.propagate_combinational()
@@ -289,14 +286,67 @@ def parse_verilog_netlist(text: str) -> CircuitGraph:
             parts = [p.strip().strip("()") for p in expr.split("|")]
             graph.add_gate(Gate(name=f"or_{target}", gate_type="OR", inputs={"a": parts[0], "b": parts[1]}, outputs={"out": target}))
 
-    # If scan chain pattern (q0 <= scan_in; q1 <= q0; etc.)
+    # Extract flip-flop capture and shift sources from always blocks
+    shift_sources: dict[str, str] = {}
+    func_sources: dict[str, str] = {}
+
+    scan_en_match = re.search(r"if\s*\(\s*scan_en\s*\)\s*begin(.*?)end\s*else\s*begin(.*?)end", text, re.DOTALL)
+    if scan_en_match:
+        shift_part = scan_en_match.group(1)
+        func_part = scan_en_match.group(2)
+        for m in re.finditer(r"([A-Za-z0-9_]+)\s*<=\s*([^;]+);", shift_part):
+            shift_sources[m.group(1).strip()] = m.group(2).strip().strip("()")
+        for m in re.finditer(r"([A-Za-z0-9_]+)\s*<=\s*([^;]+);", func_part):
+            func_sources[m.group(1).strip()] = m.group(2).strip()
+    else:
+        for m in re.finditer(r"([A-Za-z0-9_]+)\s*<=\s*([^;]+);", text):
+            target = m.group(1).strip()
+            expr = m.group(2).strip()
+            if not expr.startswith("1'b0"):
+                func_sources[target] = expr
+
+    # Construct flip-flops with scan multiplexers
     if reg_names:
+        has_scan = "scan_en" in graph.primary_inputs or "scan_in" in graph.primary_inputs
         for i, r in enumerate(reg_names):
-            d_in = "scan_in" if i == 0 else reg_names[i - 1]
+            # Functional capture logic for r
+            d_func = func_sources.get(r, "").strip()
+            clean_func = d_func.strip("()")
+            d_func_net = f"dfunc_{r}"
+            if not d_func:
+                d_func_net = "scan_in" if i == 0 else reg_names[i - 1]
+            elif re.fullmatch(r"[A-Za-z0-9_]+", clean_func):
+                d_func_net = clean_func
+            elif "^" in d_func:
+                parts = [p.strip().strip("()") for p in d_func.split("^")]
+                graph.add_gate(Gate(name=f"xor_dfunc_{r}", gate_type="XOR", inputs={"a": parts[0], "b": parts[1]}, outputs={"out": d_func_net}))
+            elif "&" in d_func:
+                parts = [p.strip().strip("()") for p in d_func.split("&")]
+                graph.add_gate(Gate(name=f"and_dfunc_{r}", gate_type="AND", inputs={"a": parts[0], "b": parts[1]}, outputs={"out": d_func_net}))
+            elif "|" in d_func:
+                parts = [p.strip().strip("()") for p in d_func.split("|")]
+                graph.add_gate(Gate(name=f"or_dfunc_{r}", gate_type="OR", inputs={"a": parts[0], "b": parts[1]}, outputs={"out": d_func_net}))
+            else:
+                d_func_net = clean_func
+
+            # If scan chain is enabled, insert Scan MUX (sel=scan_en, in0=capture, in1=shift)
+            if has_scan:
+                d_shift = shift_sources.get(r, "scan_in" if i == 0 else reg_names[i - 1])
+                mux_out = f"dmux_{r}"
+                graph.add_gate(Gate(
+                    name=f"scan_mux_{r}",
+                    gate_type="MUX",
+                    inputs={"sel": "scan_en", "in0": d_func_net, "in1": d_shift},
+                    outputs={"out": mux_out},
+                ))
+                d_target = mux_out
+            else:
+                d_target = d_func_net
+
             graph.add_gate(Gate(
                 name=f"dff_{r}",
                 gate_type="DFF",
-                inputs={"clk": "clk", "reset": "reset", "d": d_in},
+                inputs={"clk": "clk", "reset": "reset", "d": d_target},
                 outputs={"Q": r},
             ))
 

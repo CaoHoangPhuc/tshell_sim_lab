@@ -43,6 +43,7 @@ class SessionFSM:
         self.last_drc_violations: list[DRCViolation] = []
         self.last_statistics: ATPGStatistics = ATPGStatistics()
         self.injected_anomalies: set[str] = set()
+        self.raw_verilog_text: str = ""
 
     def set_context(self, context_str: str) -> tuple[bool, str]:
         c = context_str.strip().lower()
@@ -77,6 +78,17 @@ class SessionFSM:
             return False, f"//  Error: File '{path}' not found."
         text = path.read_text(encoding="utf-8")
         self.circuit = parse_verilog_netlist(text)
+        self.raw_verilog_text = text
+
+        # Cleanly reset previous design's associated state
+        self.scan_chains.clear()
+        self.clocks.clear()
+        self.pin_constraints.clear()
+        self.last_drc_violations.clear()
+        self.last_statistics = ATPGStatistics()
+        self.atpg_engine.faults.clear()
+        self.atpg_engine.patterns.clear()
+        self.injected_anomalies.clear()
 
         # Default scan chain if scan ports exist
         if "scan_in" in self.circuit.primary_inputs and "scan_out" in self.circuit.primary_outputs:

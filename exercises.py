@@ -118,7 +118,20 @@ def source(directory: Path, page: int) -> int:
             raise ValueError(f'Bài này có trang nguồn từ {first} đến {last}.')
         original = case_data.get('page_texts', {}).get(str(page))
         if original is None:
-            raise ValueError(f'Không tìm thấy nội dung trang {page} trong cơ sở tri thức.')
+            page_cmds = case_data.get('commands', {}).get(str(page), [])
+            if page_cmds:
+                original = (
+                    f"--- Lệnh tham chiếu từ trang {page} (Zero-Asset Clean-Room) ---\n"
+                    + "\n".join(page_cmds) + "\n\n"
+                    + "// Ghi chú: Toàn văn trang sách không lưu sẵn trong repo để tuân thủ Zero-Asset Policy và LEGAL.md.\n"
+                    + "// Để nạp toàn văn trang sách, chạy: python3 tools/build_knowledge_db.py --pdf <tshell_ref.pdf>\n"
+                )
+            else:
+                original = (
+                    f"--- Trang {page} (Zero-Asset Clean-Room) ---\n"
+                    + "// Toàn văn trang sách không lưu sẵn trong repo để tuân thủ Zero-Asset Policy và LEGAL.md.\n"
+                    + "// Để nạp toàn văn trang sách, chạy: python3 tools/build_knowledge_db.py --pdf <tshell_ref.pdf>\n"
+                )
     except (OSError, ValueError, json.JSONDecodeError) as exc:
         print(f'Không thể đọc trang nguồn: {exc}', file=sys.stderr)
         return 2

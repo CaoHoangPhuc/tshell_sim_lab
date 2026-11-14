@@ -102,7 +102,15 @@ class TessentShell(cmd.Cmd):
             return
         path = Path(path_str).expanduser()
         if not path.is_absolute():
-            path = (LAB_DIR / path).resolve()
+            # Check user's current working directory first, fallback to package root (LAB_DIR)
+            cwd_candidate = (Path.cwd() / path).resolve()
+            lab_candidate = (LAB_DIR / path).resolve()
+            if cwd_candidate.is_file():
+                path = cwd_candidate
+            elif lab_candidate.is_file():
+                path = lab_candidate
+            else:
+                path = cwd_candidate
         ok, msg = self.fsm.load_verilog(path)
         print(msg)
 
@@ -184,28 +192,31 @@ class TessentShell(cmd.Cmd):
         """report_drc_rules [<rule_id>] : Report DRC rules or detailed violation excerpt from manual"""
         rule_id = arg.strip()
         if rule_id:
-            # Check if excerpt available from knowledge DB
+            rule_key = rule_id.lower()
+            # 1. Always report active violations on current design first
+            matches = [v for v in self.fsm.last_drc_violations if rule_key in v.rule_id.lower()]
+            if matches:
+                print(f"//  --- Active Violations on Current Design ({rule_id.upper()}) ---")
+                for m in matches:
+                    print(f"//  {m.severity}: {m.message} ({m.rule_id})")
+            else:
+                print(f"//  Current Design Status: No active {rule_id.upper()} violations detected.")
+
+            # 2. Display reference manual excerpt or catalog documentation
             excerpt = self.fsm.drc_engine.get_rule_excerpt(rule_id)
+            rule_info = self.fsm.drc_engine.get_rule_info(rule_id)
             if excerpt:
                 print(f"//  --- DRC Rule Excerpt from Reference Manual ({rule_id.upper()}) ---")
                 print(excerpt)
-            else:
-                rule_info = self.fsm.drc_engine.get_rule_info(rule_id)
-                if rule_info:
-                    print(f"//  Rule: {rule_info['rule_id']} — {rule_info['title']}")
-                    print(f"//  Family: {rule_info['family']}")
-                    print(f"//  Reference: Tessent Shell Reference Manual (Page {rule_info['page']})")
-                    page_sample = self.fsm.drc_engine.get_rule_page_text(rule_id, max_lines=8)
-                    if page_sample:
-                        print("//  --- Reference Documentation ---")
-                        for line in page_sample.splitlines():
-                            print(f"//  {line}")
-                matches = [v for v in self.fsm.last_drc_violations if rule_id.lower() in v.rule_id.lower()]
-                if matches:
-                    for m in matches:
-                        print(f"//  Active Violation: {m.severity}: {m.message} ({m.rule_id})")
-                elif not rule_info:
-                    print(f"//  Rule: {rule_id.upper()} (No active violations detected)")
+            elif rule_info:
+                print(f"//  Rule: {rule_info['rule_id']} — {rule_info['title']}")
+                print(f"//  Family: {rule_info['family']}")
+                print(f"//  Reference: Tessent Shell Reference Manual (Page {rule_info['page']})")
+                page_sample = self.fsm.drc_engine.get_rule_page_text(rule_id, max_lines=8)
+                if page_sample:
+                    print("//  --- Reference Documentation ---")
+                    for line in page_sample.splitlines():
+                        print(f"//  {line}")
         else:
             print("//  Rule   Severity   Default_Handling   Description")
             print("//  -------------------------------------------------------------")
@@ -380,10 +391,12 @@ class TessentShell(cmd.Cmd):
         print("//  -------------------------------------------------------------")
 
     def do_write_tsdb_data(self, arg: str) -> None:
-        """write_tsdb_data : Export current design netlist and pattern views to TSDB"""
+        """write_tsdb_data [-replace] : Export current design netlist and pattern views to TSDB"""
         if not self.fsm.circuit.name:
             print("//  Error: No design loaded to write to TSDB.")
             return
+        args = shlex.split(arg)
+        replace = "-replace" in args
         self.tsdb_dir.mkdir(parents=True, exist_ok=True)
         des_dir = self.tsdb_dir / "dft_inserted_designs"
         pat_dir = self.tsdb_dir / "patterns"
@@ -393,13 +406,36 @@ class TessentShell(cmd.Cmd):
         inst_dir.mkdir(parents=True, exist_ok=True)
 
         mod = self.fsm.circuit.name
-        # Write inserted design
         v_out = des_dir / f"{mod}.v"
-        v_out.write_text(f"// TSDB Inserted Design: {mod}\n// Verified by Tessent Shell 2026.2\n", encoding="utf-8")
-
-        # Write pattern STIL
         stil_out = pat_dir / f"{mod}.stil"
-        stil_out.write_text(f"STIL 1.0;\n// Pattern vectors generated for {mod}\n// Coverage: {self.fsm.last_statistics.test_coverage:.2f}%\n", encoding="utf-8")
+
+        # Protect existing files from accidental overwrite
+        if (v_out.exists() or stil_out.exists()) and not replace:
+            print(f"//  Error: TSDB data for module '{mod}' already exists in {self.tsdb_dir}.")
+            print("//  Use 'write_tsdb_data -replace' if you intend to overwrite existing views.")
+            return
+
+        # Write actual loaded design netlist
+        if self.fsm.raw_verilog_text:
+            v_out.write_text(self.fsm.raw_verilog_text, encoding="utf-8")
+        else:
+            v_out.write_text(f"// TSDB Inserted Design: {mod}\n// Verified by Tessent Shell 2026.2\n", encoding="utf-8")
+
+        # Write pattern STIL with actual generated patterns
+        patterns = self.fsm.atpg_engine.patterns
+        stil_lines = [
+            "STIL 1.0;",
+            f"// Design: {mod}",
+            f"// Generated Patterns: {len(patterns)}",
+            f"// Test Coverage: {self.fsm.last_statistics.test_coverage:.2f}%",
+            "PatternBurst \"all_patterns\" {",
+        ]
+        for idx, pat in enumerate(patterns):
+            scan_str = "".join(str(b) for b in pat.get("shift_in", []))
+            pi_str = ", ".join(f"{k}={v}" for k, v in pat.items() if k != "shift_in")
+            stil_lines.append(f"  // Pattern {idx}: scan_in={scan_str} {pi_str}")
+        stil_lines.append("}")
+        stil_out.write_text("\n".join(stil_lines) + "\n", encoding="utf-8")
 
         print("//  Writing data to Tessent Shell Database (TSDB)...")
         print(f"//  [TSDB View: dft_inserted_designs] -> {v_out}")
@@ -460,7 +496,7 @@ def run_demo() -> int:
     shell = TessentShell()
     commands = [
         "set_context patterns -scan",
-        "read_verilog output/serial_adder_scan.v",
+        "read_verilog examples/serial_adder_scan.v",
         "report_design",
         "add_clocks clk -off_state 0",
         "report_clocks",
