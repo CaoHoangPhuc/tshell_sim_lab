@@ -1,0 +1,43 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Distribution / packaging / build artifacts
+dist/
+build/
+*.egg-info/
+.eggs/
+
+# Virtual environments
+.venv/
+env/
+venv/
+ENV/
+
+# Testing & coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Simulation outputs, waveforms & temporary artifacts
+output/
+work/
+tsdb/
+*.log
+*.vcd
+*.out
+*.vvp
+
+# Proprietary documents & external PDF manuals (Zero-Asset Policy)
+*.pdf
+tshell_*.pdf
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db

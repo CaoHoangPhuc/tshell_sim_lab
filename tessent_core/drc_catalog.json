@@ -1,0 +1,3602 @@
+{
+  "A1": {
+    "rule_id": "A1",
+    "family": "RAM Rules (A Rules)",
+    "title": "A1",
+    "page": 3745
+  },
+  "A2": {
+    "rule_id": "A2",
+    "family": "RAM Rules (A Rules)",
+    "title": "A2",
+    "page": 3746
+  },
+  "A3": {
+    "rule_id": "A3",
+    "family": "RAM Rules (A Rules)",
+    "title": "A3",
+    "page": 3747
+  },
+  "A4": {
+    "rule_id": "A4",
+    "family": "RAM Rules (A Rules)",
+    "title": "A4",
+    "page": 3748
+  },
+  "A5": {
+    "rule_id": "A5",
+    "family": "RAM Rules (A Rules)",
+    "title": "A5",
+    "page": 3749
+  },
+  "A6": {
+    "rule_id": "A6",
+    "family": "RAM Rules (A Rules)",
+    "title": "A6",
+    "page": 3750
+  },
+  "A7": {
+    "rule_id": "A7",
+    "family": "RAM Rules (A Rules)",
+    "title": "A7",
+    "page": 3751
+  },
+  "A9": {
+    "rule_id": "A9",
+    "family": "RAM Rules (A Rules)",
+    "title": "A9",
+    "page": 3752
+  },
+  "A10": {
+    "rule_id": "A10",
+    "family": "RAM Rules (A Rules)",
+    "title": "A10",
+    "page": 3753
+  },
+  "A11": {
+    "rule_id": "A11",
+    "family": "RAM Rules (A Rules)",
+    "title": "A11",
+    "page": 3754
+  },
+  "A12": {
+    "rule_id": "A12",
+    "family": "RAM Rules (A Rules)",
+    "title": "A12",
+    "page": 3755
+  },
+  "A13": {
+    "rule_id": "A13",
+    "family": "RAM Rules (A Rules)",
+    "title": "A13",
+    "page": 3756
+  },
+  "A14": {
+    "rule_id": "A14",
+    "family": "RAM Rules (A Rules)",
+    "title": "A14",
+    "page": 3757
+  },
+  "A15": {
+    "rule_id": "A15",
+    "family": "RAM Rules (A Rules)",
+    "title": "A15",
+    "page": 3758
+  },
+  "A16": {
+    "rule_id": "A16",
+    "family": "RAM Rules (A Rules)",
+    "title": "A16",
+    "page": 3759
+  },
+  "A17": {
+    "rule_id": "A17",
+    "family": "RAM Rules (A Rules)",
+    "title": "A17",
+    "page": 3760
+  },
+  "A18": {
+    "rule_id": "A18",
+    "family": "RAM Rules (A Rules)",
+    "title": "A18",
+    "page": 3762
+  },
+  "ASSERTION": {
+    "rule_id": "ASSERTION",
+    "family": "Assertion Rules (ASSERT Rules)",
+    "title": "Assertion Values and the Enforcement of Assertions",
+    "page": 3764
+  },
+  "ASSERT1": {
+    "rule_id": "ASSERT1",
+    "family": "Assertion Rules (ASSERT Rules)",
+    "title": "ASSERT1",
+    "page": 3766
+  },
+  "ASSERT2": {
+    "rule_id": "ASSERT2",
+    "family": "Assertion Rules (ASSERT Rules)",
+    "title": "ASSERT2",
+    "page": 3768
+  },
+  "ASSERT3": {
+    "rule_id": "ASSERT3",
+    "family": "Assertion Rules (ASSERT Rules)",
+    "title": "ASSERT3",
+    "page": 3770
+  },
+  "B2": {
+    "rule_id": "B2",
+    "family": "BIST Rules (B Rules)",
+    "title": "B2",
+    "page": 3773
+  },
+  "B4": {
+    "rule_id": "B4",
+    "family": "BIST Rules (B Rules)",
+    "title": "B4",
+    "page": 3774
+  },
+  "B5": {
+    "rule_id": "B5",
+    "family": "BIST Rules (B Rules)",
+    "title": "B5",
+    "page": 3775
+  },
+  "B6": {
+    "rule_id": "B6",
+    "family": "BIST Rules (B Rules)",
+    "title": "B6",
+    "page": 3776
+  },
+  "B7": {
+    "rule_id": "B7",
+    "family": "BIST Rules (B Rules)",
+    "title": "B7",
+    "page": 3778
+  },
+  "B16": {
+    "rule_id": "B16",
+    "family": "BIST Rules (B Rules)",
+    "title": "B16",
+    "page": 3781
+  },
+  "B17": {
+    "rule_id": "B17",
+    "family": "BIST Rules (B Rules)",
+    "title": "B17",
+    "page": 3784
+  },
+  "BSCAN1": {
+    "rule_id": "BSCAN1",
+    "family": "BSCAN Rules",
+    "title": "BSCAN1",
+    "page": 3787
+  },
+  "BSCAN2": {
+    "rule_id": "BSCAN2",
+    "family": "BSCAN Rules",
+    "title": "BSCAN2",
+    "page": 3788
+  },
+  "BSCAN3": {
+    "rule_id": "BSCAN3",
+    "family": "BSCAN Rules",
+    "title": "BSCAN3",
+    "page": 3790
+  },
+  "BSCAN4": {
+    "rule_id": "BSCAN4",
+    "family": "BSCAN Rules",
+    "title": "BSCAN4",
+    "page": 3791
+  },
+  "BSCAN5": {
+    "rule_id": "BSCAN5",
+    "family": "BSCAN Rules",
+    "title": "BSCAN5",
+    "page": 3792
+  },
+  "BSCAN6": {
+    "rule_id": "BSCAN6",
+    "family": "BSCAN Rules",
+    "title": "BSCAN6",
+    "page": 3793
+  },
+  "BSCAN7": {
+    "rule_id": "BSCAN7",
+    "family": "BSCAN Rules",
+    "title": "BSCAN7",
+    "page": 3794
+  },
+  "BSCAN8": {
+    "rule_id": "BSCAN8",
+    "family": "BSCAN Rules",
+    "title": "BSCAN8",
+    "page": 3795
+  },
+  "BSCAN9": {
+    "rule_id": "BSCAN9",
+    "family": "BSCAN Rules",
+    "title": "BSCAN9",
+    "page": 3796
+  },
+  "BSCAN10": {
+    "rule_id": "BSCAN10",
+    "family": "BSCAN Rules",
+    "title": "BSCAN10",
+    "page": 3797
+  },
+  "BSCAN11": {
+    "rule_id": "BSCAN11",
+    "family": "BSCAN Rules",
+    "title": "BSCAN11",
+    "page": 3798
+  },
+  "BSCAN12": {
+    "rule_id": "BSCAN12",
+    "family": "BSCAN Rules",
+    "title": "BSCAN12",
+    "page": 3799
+  },
+  "BSCAN13": {
+    "rule_id": "BSCAN13",
+    "family": "BSCAN Rules",
+    "title": "BSCAN13",
+    "page": 3800
+  },
+  "C1": {
+    "rule_id": "C1",
+    "family": "Clock Rules (C Rules)",
+    "title": "C1",
+    "page": 3809
+  },
+  "C2": {
+    "rule_id": "C2",
+    "family": "Clock Rules (C Rules)",
+    "title": "C2",
+    "page": 3814
+  },
+  "C3": {
+    "rule_id": "C3",
+    "family": "Clock Rules (C Rules)",
+    "title": "C3",
+    "page": 3816
+  },
+  "C4": {
+    "rule_id": "C4",
+    "family": "Clock Rules (C Rules)",
+    "title": "C4",
+    "page": 3822
+  },
+  "C5": {
+    "rule_id": "C5",
+    "family": "Clock Rules (C Rules)",
+    "title": "C5",
+    "page": 3828
+  },
+  "C6": {
+    "rule_id": "C6",
+    "family": "Clock Rules (C Rules)",
+    "title": "C6",
+    "page": 3830
+  },
+  "C7": {
+    "rule_id": "C7",
+    "family": "Clock Rules (C Rules)",
+    "title": "C7",
+    "page": 3833
+  },
+  "C8": {
+    "rule_id": "C8",
+    "family": "Clock Rules (C Rules)",
+    "title": "C8",
+    "page": 3835
+  },
+  "C9": {
+    "rule_id": "C9",
+    "family": "Clock Rules (C Rules)",
+    "title": "C9",
+    "page": 3837
+  },
+  "C10": {
+    "rule_id": "C10",
+    "family": "Clock Rules (C Rules)",
+    "title": "C10",
+    "page": 3839
+  },
+  "C16": {
+    "rule_id": "C16",
+    "family": "Clock Rules (C Rules)",
+    "title": "C16",
+    "page": 3840
+  },
+  "C17": {
+    "rule_id": "C17",
+    "family": "Clock Rules (C Rules)",
+    "title": "C17",
+    "page": 3842
+  },
+  "C19": {
+    "rule_id": "C19",
+    "family": "Clock Rules (C Rules)",
+    "title": "C19",
+    "page": 3843
+  },
+  "C21": {
+    "rule_id": "C21",
+    "family": "Clock Rules (C Rules)",
+    "title": "C21",
+    "page": 3845
+  },
+  "C22": {
+    "rule_id": "C22",
+    "family": "Clock Rules (C Rules)",
+    "title": "C22",
+    "page": 3848
+  },
+  "C23": {
+    "rule_id": "C23",
+    "family": "Clock Rules (C Rules)",
+    "title": "C23",
+    "page": 3851
+  },
+  "C24": {
+    "rule_id": "C24",
+    "family": "Clock Rules (C Rules)",
+    "title": "C24",
+    "page": 3853
+  },
+  "C25": {
+    "rule_id": "C25",
+    "family": "Clock Rules (C Rules)",
+    "title": "C25",
+    "page": 3855
+  },
+  "C26": {
+    "rule_id": "C26",
+    "family": "Clock Rules (C Rules)",
+    "title": "C26",
+    "page": 3857
+  },
+  "C27": {
+    "rule_id": "C27",
+    "family": "Clock Rules (C Rules)",
+    "title": "C27",
+    "page": 3859
+  },
+  "D1": {
+    "rule_id": "D1",
+    "family": "Scan Cell Data Rules (D Rules)",
+    "title": "D1",
+    "page": 3863
+  },
+  "D2": {
+    "rule_id": "D2",
+    "family": "Scan Cell Data Rules (D Rules)",
+    "title": "D2",
+    "page": 3868
+  },
+  "D3": {
+    "rule_id": "D3",
+    "family": "Scan Cell Data Rules (D Rules)",
+    "title": "D3",
+    "page": 3870
+  },
+  "D4": {
+    "rule_id": "D4",
+    "family": "Scan Cell Data Rules (D Rules)",
+    "title": "D4",
+    "page": 3871
+  },
+  "D5": {
+    "rule_id": "D5",
+    "family": "Scan Cell Data Rules (D Rules)",
+    "title": "D5",
+    "page": 3872
+  },
+  "D6": {
+    "rule_id": "D6",
+    "family": "Scan Cell Data Rules (D Rules)",
+    "title": "D6",
+    "page": 3874
+  },
+  "D7": {
+    "rule_id": "D7",
+    "family": "Scan Cell Data Rules (D Rules)",
+    "title": "D7",
+    "page": 3875
+  },
+  "D8": {
+    "rule_id": "D8",
+    "family": "Scan Cell Data Rules (D Rules)",
+    "title": "D8",
+    "page": 3877
+  },
+  "D12": {
+    "rule_id": "D12",
+    "family": "Scan Cell Data Rules (D Rules)",
+    "title": "D12",
+    "page": 3879
+  },
+  "SIMULATION": {
+    "rule_id": "SIMULATION",
+    "family": "Pre-DFT Clock Rules (DFT_C Rules)",
+    "title": "Simulation Contexts for Pre-DFT DRCs",
+    "page": 3882
+  },
+  "DFT_C1": {
+    "rule_id": "DFT_C1",
+    "family": "Pre-DFT Clock Rules (DFT_C Rules)",
+    "title": "DFT_C1",
+    "page": 3886
+  },
+  "DFT_C2": {
+    "rule_id": "DFT_C2",
+    "family": "Pre-DFT Clock Rules (DFT_C Rules)",
+    "title": "DFT_C2",
+    "page": 3890
+  },
+  "DFT_C3": {
+    "rule_id": "DFT_C3",
+    "family": "Pre-DFT Clock Rules (DFT_C Rules)",
+    "title": "DFT_C3",
+    "page": 3892
+  },
+  "DFT_C4": {
+    "rule_id": "DFT_C4",
+    "family": "Pre-DFT Clock Rules (DFT_C Rules)",
+    "title": "DFT_C4",
+    "page": 3894
+  },
+  "DFT_C5": {
+    "rule_id": "DFT_C5",
+    "family": "Pre-DFT Clock Rules (DFT_C Rules)",
+    "title": "DFT_C5",
+    "page": 3895
+  },
+  "DFT_C6": {
+    "rule_id": "DFT_C6",
+    "family": "Pre-DFT Clock Rules (DFT_C Rules)",
+    "title": "DFT_C6",
+    "page": 3896
+  },
+  "DFT_C7": {
+    "rule_id": "DFT_C7",
+    "family": "Pre-DFT Clock Rules (DFT_C Rules)",
+    "title": "DFT_C7",
+    "page": 3899
+  },
+  "DFT_C8": {
+    "rule_id": "DFT_C8",
+    "family": "Pre-DFT Clock Rules (DFT_C Rules)",
+    "title": "DFT_C8",
+    "page": 3901
+  },
+  "DFT_C9": {
+    "rule_id": "DFT_C9",
+    "family": "Pre-DFT Clock Rules (DFT_C Rules)",
+    "title": "DFT_C9",
+    "page": 3903
+  },
+  "DFT_C10": {
+    "rule_id": "DFT_C10",
+    "family": "Pre-DFT Clock Rules (DFT_C Rules)",
+    "title": "DFT_C10",
+    "page": 3907
+  },
+  "DFT_C11": {
+    "rule_id": "DFT_C11",
+    "family": "Pre-DFT Clock Rules (DFT_C Rules)",
+    "title": "DFT_C11",
+    "page": 3913
+  },
+  "DFT_C12": {
+    "rule_id": "DFT_C12",
+    "family": "Pre-DFT Clock Rules (DFT_C Rules)",
+    "title": "DFT_C12",
+    "page": 3914
+  },
+  "DFT_C13": {
+    "rule_id": "DFT_C13",
+    "family": "Pre-DFT Clock Rules (DFT_C Rules)",
+    "title": "DFT_C13",
+    "page": 3916
+  },
+  "DFT_S1": {
+    "rule_id": "DFT_S1",
+    "family": "Pre-DFT Scan Rules (DFT_S Rules)",
+    "title": "DFT_S1",
+    "page": 3918
+  },
+  "E1": {
+    "rule_id": "E1",
+    "family": "Extra Rules (E Rules)",
+    "title": "E1",
+    "page": 3923
+  },
+  "E2": {
+    "rule_id": "E2",
+    "family": "Extra Rules (E Rules)",
+    "title": "E2",
+    "page": 3924
+  },
+  "E3": {
+    "rule_id": "E3",
+    "family": "Extra Rules (E Rules)",
+    "title": "E3",
+    "page": 3925
+  },
+  "E4": {
+    "rule_id": "E4",
+    "family": "Extra Rules (E Rules)",
+    "title": "E4",
+    "page": 3926
+  },
+  "E5": {
+    "rule_id": "E5",
+    "family": "Extra Rules (E Rules)",
+    "title": "E5",
+    "page": 3930
+  },
+  "E6": {
+    "rule_id": "E6",
+    "family": "Extra Rules (E Rules)",
+    "title": "E6",
+    "page": 3933
+  },
+  "E7": {
+    "rule_id": "E7",
+    "family": "Extra Rules (E Rules)",
+    "title": "E7",
+    "page": 3934
+  },
+  "E8": {
+    "rule_id": "E8",
+    "family": "Extra Rules (E Rules)",
+    "title": "E8",
+    "page": 3936
+  },
+  "E9": {
+    "rule_id": "E9",
+    "family": "Extra Rules (E Rules)",
+    "title": "E9",
+    "page": 3937
+  },
+  "E10": {
+    "rule_id": "E10",
+    "family": "Extra Rules (E Rules)",
+    "title": "E10",
+    "page": 3938
+  },
+  "E11": {
+    "rule_id": "E11",
+    "family": "Extra Rules (E Rules)",
+    "title": "E11",
+    "page": 3943
+  },
+  "E12": {
+    "rule_id": "E12",
+    "family": "Extra Rules (E Rules)",
+    "title": "E12",
+    "page": 3944
+  },
+  "E13": {
+    "rule_id": "E13",
+    "family": "Extra Rules (E Rules)",
+    "title": "E13",
+    "page": 3945
+  },
+  "E14": {
+    "rule_id": "E14",
+    "family": "Extra Rules (E Rules)",
+    "title": "E14",
+    "page": 3946
+  },
+  "E15": {
+    "rule_id": "E15",
+    "family": "Extra Rules (E Rules)",
+    "title": "E15",
+    "page": 3950
+  },
+  "E16": {
+    "rule_id": "E16",
+    "family": "Extra Rules (E Rules)",
+    "title": "E16",
+    "page": 3951
+  },
+  "E17": {
+    "rule_id": "E17",
+    "family": "Extra Rules (E Rules)",
+    "title": "E17",
+    "page": 3954
+  },
+  "F3": {
+    "rule_id": "F3",
+    "family": "EDT Finder Rules (F Rules)",
+    "title": "F3",
+    "page": 3958
+  },
+  "F4": {
+    "rule_id": "F4",
+    "family": "EDT Finder Rules (F Rules)",
+    "title": "F4",
+    "page": 3959
+  },
+  "F5": {
+    "rule_id": "F5",
+    "family": "EDT Finder Rules (F Rules)",
+    "title": "F5",
+    "page": 3960
+  },
+  "F6": {
+    "rule_id": "F6",
+    "family": "EDT Finder Rules (F Rules)",
+    "title": "F6",
+    "page": 3962
+  },
+  "F7": {
+    "rule_id": "F7",
+    "family": "EDT Finder Rules (F Rules)",
+    "title": "F7",
+    "page": 3964
+  },
+  "F8": {
+    "rule_id": "F8",
+    "family": "EDT Finder Rules (F Rules)",
+    "title": "F8",
+    "page": 3965
+  },
+  "F9": {
+    "rule_id": "F9",
+    "family": "EDT Finder Rules (F Rules)",
+    "title": "F9",
+    "page": 3970
+  },
+  "F10": {
+    "rule_id": "F10",
+    "family": "EDT Finder Rules (F Rules)",
+    "title": "F10",
+    "page": 3971
+  },
+  "F11": {
+    "rule_id": "F11",
+    "family": "EDT Finder Rules (F Rules)",
+    "title": "F11",
+    "page": 3973
+  },
+  "F12": {
+    "rule_id": "F12",
+    "family": "EDT Finder Rules (F Rules)",
+    "title": "F12",
+    "page": 3974
+  },
+  "F13": {
+    "rule_id": "F13",
+    "family": "EDT Finder Rules (F Rules)",
+    "title": "F13",
+    "page": 3975
+  },
+  "F14": {
+    "rule_id": "F14",
+    "family": "EDT Finder Rules (F Rules)",
+    "title": "F14",
+    "page": 3979
+  },
+  "F15": {
+    "rule_id": "F15",
+    "family": "EDT Finder Rules (F Rules)",
+    "title": "F15",
+    "page": 3980
+  },
+  "F16": {
+    "rule_id": "F16",
+    "family": "EDT Finder Rules (F Rules)",
+    "title": "F16",
+    "page": 3981
+  },
+  "F17": {
+    "rule_id": "F17",
+    "family": "EDT Finder Rules (F Rules)",
+    "title": "F17",
+    "page": 3982
+  },
+  "F18": {
+    "rule_id": "F18",
+    "family": "EDT Finder Rules (F Rules)",
+    "title": "F18",
+    "page": 3983
+  },
+  "F19": {
+    "rule_id": "F19",
+    "family": "EDT Finder Rules (F Rules)",
+    "title": "F19",
+    "page": 3984
+  },
+  "F20": {
+    "rule_id": "F20",
+    "family": "EDT Finder Rules (F Rules)",
+    "title": "F20",
+    "page": 3987
+  },
+  "F21": {
+    "rule_id": "F21",
+    "family": "EDT Finder Rules (F Rules)",
+    "title": "F21",
+    "page": 3989
+  },
+  "F22": {
+    "rule_id": "F22",
+    "family": "EDT Finder Rules (F Rules)",
+    "title": "F22",
+    "page": 3990
+  },
+  "FN1": {
+    "rule_id": "FN1",
+    "family": "Flattening Rules (FN, FP, and FG Rules)",
+    "title": "FN1",
+    "page": 3995
+  },
+  "FN2": {
+    "rule_id": "FN2",
+    "family": "Flattening Rules (FN, FP, and FG Rules)",
+    "title": "FN2",
+    "page": 3996
+  },
+  "FN3": {
+    "rule_id": "FN3",
+    "family": "Flattening Rules (FN, FP, and FG Rules)",
+    "title": "FN3",
+    "page": 3997
+  },
+  "FN4": {
+    "rule_id": "FN4",
+    "family": "Flattening Rules (FN, FP, and FG Rules)",
+    "title": "FN4",
+    "page": 3998
+  },
+  "FN5": {
+    "rule_id": "FN5",
+    "family": "Flattening Rules (FN, FP, and FG Rules)",
+    "title": "FN5",
+    "page": 3999
+  },
+  "FN6": {
+    "rule_id": "FN6",
+    "family": "Flattening Rules (FN, FP, and FG Rules)",
+    "title": "FN6",
+    "page": 4000
+  },
+  "FN7": {
+    "rule_id": "FN7",
+    "family": "Flattening Rules (FN, FP, and FG Rules)",
+    "title": "FN7",
+    "page": 4001
+  },
+  "FN8": {
+    "rule_id": "FN8",
+    "family": "Flattening Rules (FN, FP, and FG Rules)",
+    "title": "FN8",
+    "page": 4002
+  },
+  "FN9": {
+    "rule_id": "FN9",
+    "family": "Flattening Rules (FN, FP, and FG Rules)",
+    "title": "FN9",
+    "page": 4003
+  },
+  "FP1": {
+    "rule_id": "FP1",
+    "family": "Flattening Rules (FN, FP, and FG Rules)",
+    "title": "FP1",
+    "page": 4004
+  },
+  "FP2": {
+    "rule_id": "FP2",
+    "family": "Flattening Rules (FN, FP, and FG Rules)",
+    "title": "FP2",
+    "page": 4005
+  },
+  "FP3": {
+    "rule_id": "FP3",
+    "family": "Flattening Rules (FN, FP, and FG Rules)",
+    "title": "FP3",
+    "page": 4006
+  },
+  "FP4": {
+    "rule_id": "FP4",
+    "family": "Flattening Rules (FN, FP, and FG Rules)",
+    "title": "FP4",
+    "page": 4007
+  },
+  "FP5": {
+    "rule_id": "FP5",
+    "family": "Flattening Rules (FN, FP, and FG Rules)",
+    "title": "FP5",
+    "page": 4008
+  },
+  "FP6": {
+    "rule_id": "FP6",
+    "family": "Flattening Rules (FN, FP, and FG Rules)",
+    "title": "FP6",
+    "page": 4009
+  },
+  "FP7": {
+    "rule_id": "FP7",
+    "family": "Flattening Rules (FN, FP, and FG Rules)",
+    "title": "FP7",
+    "page": 4010
+  },
+  "FP8": {
+    "rule_id": "FP8",
+    "family": "Flattening Rules (FN, FP, and FG Rules)",
+    "title": "FP8",
+    "page": 4011
+  },
+  "FP9": {
+    "rule_id": "FP9",
+    "family": "Flattening Rules (FN, FP, and FG Rules)",
+    "title": "FP9",
+    "page": 4012
+  },
+  "FP10": {
+    "rule_id": "FP10",
+    "family": "Flattening Rules (FN, FP, and FG Rules)",
+    "title": "FP10",
+    "page": 4013
+  },
+  "FP11": {
+    "rule_id": "FP11",
+    "family": "Flattening Rules (FN, FP, and FG Rules)",
+    "title": "FP11",
+    "page": 4014
+  },
+  "FP12": {
+    "rule_id": "FP12",
+    "family": "Flattening Rules (FN, FP, and FG Rules)",
+    "title": "FP12",
+    "page": 4015
+  },
+  "FP13": {
+    "rule_id": "FP13",
+    "family": "Flattening Rules (FN, FP, and FG Rules)",
+    "title": "FP13",
+    "page": 4016
+  },
+  "FG3": {
+    "rule_id": "FG3",
+    "family": "Flattening Rules (FN, FP, and FG Rules)",
+    "title": "FG3",
+    "page": 4017
+  },
+  "FG7": {
+    "rule_id": "FG7",
+    "family": "Flattening Rules (FN, FP, and FG Rules)",
+    "title": "FG7",
+    "page": 4018
+  },
+  "FG8": {
+    "rule_id": "FG8",
+    "family": "Flattening Rules (FN, FP, and FG Rules)",
+    "title": "FG8",
+    "page": 4019
+  },
+  "G1": {
+    "rule_id": "G1",
+    "family": "General Rules (G Rules)",
+    "title": "G1",
+    "page": 4021
+  },
+  "G2": {
+    "rule_id": "G2",
+    "family": "General Rules (G Rules)",
+    "title": "G2",
+    "page": 4022
+  },
+  "G3": {
+    "rule_id": "G3",
+    "family": "General Rules (G Rules)",
+    "title": "G3",
+    "page": 4023
+  },
+  "G4": {
+    "rule_id": "G4",
+    "family": "General Rules (G Rules)",
+    "title": "G4",
+    "page": 4024
+  },
+  "G5": {
+    "rule_id": "G5",
+    "family": "General Rules (G Rules)",
+    "title": "G5",
+    "page": 4025
+  },
+  "G6": {
+    "rule_id": "G6",
+    "family": "General Rules (G Rules)",
+    "title": "G6",
+    "page": 4026
+  },
+  "G7": {
+    "rule_id": "G7",
+    "family": "General Rules (G Rules)",
+    "title": "G7",
+    "page": 4027
+  },
+  "G8": {
+    "rule_id": "G8",
+    "family": "General Rules (G Rules)",
+    "title": "G8",
+    "page": 4028
+  },
+  "G9": {
+    "rule_id": "G9",
+    "family": "General Rules (G Rules)",
+    "title": "G9",
+    "page": 4029
+  },
+  "G10": {
+    "rule_id": "G10",
+    "family": "General Rules (G Rules)",
+    "title": "G10",
+    "page": 4030
+  },
+  "G11": {
+    "rule_id": "G11",
+    "family": "General Rules (G Rules)",
+    "title": "G11",
+    "page": 4031
+  },
+  "HB_IJTAG1": {
+    "rule_id": "HB_IJTAG1",
+    "family": "HB-IJTAG Rules",
+    "title": "HB_IJTAG1",
+    "page": 4034
+  },
+  "HB_IJTAG3": {
+    "rule_id": "HB_IJTAG3",
+    "family": "HB-IJTAG Rules",
+    "title": "HB_IJTAG3",
+    "page": 4035
+  },
+  "HB_IJTAG4": {
+    "rule_id": "HB_IJTAG4",
+    "family": "HB-IJTAG Rules",
+    "title": "HB_IJTAG4",
+    "page": 4036
+  },
+  "HB_IJTAG5": {
+    "rule_id": "HB_IJTAG5",
+    "family": "HB-IJTAG Rules",
+    "title": "HB_IJTAG5",
+    "page": 4037
+  },
+  "HB_IJTAG6": {
+    "rule_id": "HB_IJTAG6",
+    "family": "HB-IJTAG Rules",
+    "title": "HB_IJTAG6",
+    "page": 4038
+  },
+  "HB_IJTAG7": {
+    "rule_id": "HB_IJTAG7",
+    "family": "HB-IJTAG Rules",
+    "title": "HB_IJTAG7",
+    "page": 4039
+  },
+  "HB_IJTAG8": {
+    "rule_id": "HB_IJTAG8",
+    "family": "HB-IJTAG Rules",
+    "title": "HB_IJTAG8",
+    "page": 4040
+  },
+  "HB_IJTAG9": {
+    "rule_id": "HB_IJTAG9",
+    "family": "HB-IJTAG Rules",
+    "title": "HB_IJTAG9",
+    "page": 4041
+  },
+  "HB_IJTAG10": {
+    "rule_id": "HB_IJTAG10",
+    "family": "HB-IJTAG Rules",
+    "title": "HB_IJTAG10",
+    "page": 4042
+  },
+  "HB_IJTAG11": {
+    "rule_id": "HB_IJTAG11",
+    "family": "HB-IJTAG Rules",
+    "title": "HB_IJTAG11",
+    "page": 4043
+  },
+  "HB_IJTAG12": {
+    "rule_id": "HB_IJTAG12",
+    "family": "HB-IJTAG Rules",
+    "title": "HB_IJTAG12",
+    "page": 4044
+  },
+  "HB_IJTAG13": {
+    "rule_id": "HB_IJTAG13",
+    "family": "HB-IJTAG Rules",
+    "title": "HB_IJTAG13",
+    "page": 4045
+  },
+  "HB_IJTAG14": {
+    "rule_id": "HB_IJTAG14",
+    "family": "HB-IJTAG Rules",
+    "title": "HB_IJTAG14",
+    "page": 4046
+  },
+  "HB_IJTAG15": {
+    "rule_id": "HB_IJTAG15",
+    "family": "HB-IJTAG Rules",
+    "title": "HB_IJTAG15",
+    "page": 4047
+  },
+  "HB_IJTAG16": {
+    "rule_id": "HB_IJTAG16",
+    "family": "HB-IJTAG Rules",
+    "title": "HB_IJTAG16",
+    "page": 4048
+  },
+  "HB_IJTAG18": {
+    "rule_id": "HB_IJTAG18",
+    "family": "HB-IJTAG Rules",
+    "title": "HB_IJTAG18",
+    "page": 4049
+  },
+  "HB_IJTAG20": {
+    "rule_id": "HB_IJTAG20",
+    "family": "HB-IJTAG Rules",
+    "title": "HB_IJTAG20",
+    "page": 4050
+  },
+  "HB_IJTAG21": {
+    "rule_id": "HB_IJTAG21",
+    "family": "HB-IJTAG Rules",
+    "title": "HB_IJTAG21",
+    "page": 4051
+  },
+  "HB_IJTAG22": {
+    "rule_id": "HB_IJTAG22",
+    "family": "HB-IJTAG Rules",
+    "title": "HB_IJTAG22",
+    "page": 4052
+  },
+  "HB_IJTAG24": {
+    "rule_id": "HB_IJTAG24",
+    "family": "HB-IJTAG Rules",
+    "title": "HB_IJTAG24",
+    "page": 4053
+  },
+  "HB_IJTAG25": {
+    "rule_id": "HB_IJTAG25",
+    "family": "HB-IJTAG Rules",
+    "title": "HB_IJTAG25",
+    "page": 4054
+  },
+  "HB_IJTAG26": {
+    "rule_id": "HB_IJTAG26",
+    "family": "HB-IJTAG Rules",
+    "title": "HB_IJTAG26",
+    "page": 4055
+  },
+  "HB_IJTAG28": {
+    "rule_id": "HB_IJTAG28",
+    "family": "HB-IJTAG Rules",
+    "title": "HB_IJTAG28",
+    "page": 4056
+  },
+  "HB_IJTAG29": {
+    "rule_id": "HB_IJTAG29",
+    "family": "HB-IJTAG Rules",
+    "title": "HB_IJTAG29",
+    "page": 4057
+  },
+  "HB_IJTAG30": {
+    "rule_id": "HB_IJTAG30",
+    "family": "HB-IJTAG Rules",
+    "title": "HB_IJTAG30",
+    "page": 4058
+  },
+  "HB_IJTAG32": {
+    "rule_id": "HB_IJTAG32",
+    "family": "HB-IJTAG Rules",
+    "title": "HB_IJTAG32",
+    "page": 4059
+  },
+  "HB_IJTAG33": {
+    "rule_id": "HB_IJTAG33",
+    "family": "HB-IJTAG Rules",
+    "title": "HB_IJTAG33",
+    "page": 4060
+  },
+  "HB_IJTAG34": {
+    "rule_id": "HB_IJTAG34",
+    "family": "HB-IJTAG Rules",
+    "title": "HB_IJTAG34",
+    "page": 4061
+  },
+  "HB_IJTAG36": {
+    "rule_id": "HB_IJTAG36",
+    "family": "HB-IJTAG Rules",
+    "title": "HB_IJTAG36",
+    "page": 4062
+  },
+  "HB_IJTAG37": {
+    "rule_id": "HB_IJTAG37",
+    "family": "HB-IJTAG Rules",
+    "title": "HB_IJTAG37",
+    "page": 4063
+  },
+  "I1": {
+    "rule_id": "I1",
+    "family": "ICL Extraction Rules (I Rules)",
+    "title": "I1",
+    "page": 4065
+  },
+  "I2": {
+    "rule_id": "I2",
+    "family": "ICL Extraction Rules (I Rules)",
+    "title": "I2",
+    "page": 4067
+  },
+  "I3": {
+    "rule_id": "I3",
+    "family": "ICL Extraction Rules (I Rules)",
+    "title": "I3",
+    "page": 4069
+  },
+  "I4": {
+    "rule_id": "I4",
+    "family": "ICL Extraction Rules (I Rules)",
+    "title": "I4",
+    "page": 4071
+  },
+  "I5": {
+    "rule_id": "I5",
+    "family": "ICL Extraction Rules (I Rules)",
+    "title": "I5",
+    "page": 4073
+  },
+  "I6": {
+    "rule_id": "I6",
+    "family": "ICL Extraction Rules (I Rules)",
+    "title": "I6",
+    "page": 4074
+  },
+  "I7": {
+    "rule_id": "I7",
+    "family": "ICL Extraction Rules (I Rules)",
+    "title": "I7",
+    "page": 4076
+  },
+  "ICL1": {
+    "rule_id": "ICL1",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL1",
+    "page": 4089
+  },
+  "ICL2": {
+    "rule_id": "ICL2",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL2",
+    "page": 4090
+  },
+  "ICL3": {
+    "rule_id": "ICL3",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL3",
+    "page": 4091
+  },
+  "ICL4": {
+    "rule_id": "ICL4",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL4",
+    "page": 4092
+  },
+  "ICL5": {
+    "rule_id": "ICL5",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL5",
+    "page": 4093
+  },
+  "ICL6": {
+    "rule_id": "ICL6",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL6",
+    "page": 4094
+  },
+  "ICL7": {
+    "rule_id": "ICL7",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL7",
+    "page": 4095
+  },
+  "ICL8": {
+    "rule_id": "ICL8",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL8",
+    "page": 4096
+  },
+  "ICL9": {
+    "rule_id": "ICL9",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL9",
+    "page": 4097
+  },
+  "ICL10": {
+    "rule_id": "ICL10",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL10",
+    "page": 4098
+  },
+  "ICL11": {
+    "rule_id": "ICL11",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL11",
+    "page": 4099
+  },
+  "ICL12": {
+    "rule_id": "ICL12",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL12",
+    "page": 4100
+  },
+  "ICL13": {
+    "rule_id": "ICL13",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL13",
+    "page": 4101
+  },
+  "ICL14": {
+    "rule_id": "ICL14",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL14",
+    "page": 4102
+  },
+  "ICL15": {
+    "rule_id": "ICL15",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL15",
+    "page": 4103
+  },
+  "ICL16": {
+    "rule_id": "ICL16",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL16",
+    "page": 4104
+  },
+  "ICL17": {
+    "rule_id": "ICL17",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL17",
+    "page": 4105
+  },
+  "ICL18": {
+    "rule_id": "ICL18",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL18",
+    "page": 4106
+  },
+  "ICL19": {
+    "rule_id": "ICL19",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL19",
+    "page": 4107
+  },
+  "ICL20": {
+    "rule_id": "ICL20",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL20",
+    "page": 4108
+  },
+  "ICL21": {
+    "rule_id": "ICL21",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL21",
+    "page": 4109
+  },
+  "ICL22": {
+    "rule_id": "ICL22",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL22",
+    "page": 4110
+  },
+  "ICL23": {
+    "rule_id": "ICL23",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL23",
+    "page": 4111
+  },
+  "ICL24": {
+    "rule_id": "ICL24",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL24",
+    "page": 4112
+  },
+  "ICL25": {
+    "rule_id": "ICL25",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL25",
+    "page": 4113
+  },
+  "ICL26": {
+    "rule_id": "ICL26",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL26",
+    "page": 4114
+  },
+  "ICL27": {
+    "rule_id": "ICL27",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL27",
+    "page": 4115
+  },
+  "ICL28": {
+    "rule_id": "ICL28",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL28",
+    "page": 4116
+  },
+  "ICL29": {
+    "rule_id": "ICL29",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL29",
+    "page": 4117
+  },
+  "ICL30": {
+    "rule_id": "ICL30",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL30",
+    "page": 4118
+  },
+  "ICL31": {
+    "rule_id": "ICL31",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL31",
+    "page": 4119
+  },
+  "ICL32": {
+    "rule_id": "ICL32",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL32",
+    "page": 4120
+  },
+  "ICL33": {
+    "rule_id": "ICL33",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL33",
+    "page": 4121
+  },
+  "ICL34": {
+    "rule_id": "ICL34",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL34",
+    "page": 4122
+  },
+  "ICL35": {
+    "rule_id": "ICL35",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL35",
+    "page": 4123
+  },
+  "ICL36": {
+    "rule_id": "ICL36",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL36",
+    "page": 4124
+  },
+  "ICL37": {
+    "rule_id": "ICL37",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL37",
+    "page": 4125
+  },
+  "ICL38": {
+    "rule_id": "ICL38",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL38",
+    "page": 4126
+  },
+  "ICL39": {
+    "rule_id": "ICL39",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL39",
+    "page": 4127
+  },
+  "ICL40": {
+    "rule_id": "ICL40",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL40",
+    "page": 4128
+  },
+  "ICL41": {
+    "rule_id": "ICL41",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL41",
+    "page": 4129
+  },
+  "ICL42": {
+    "rule_id": "ICL42",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL42",
+    "page": 4130
+  },
+  "ICL44": {
+    "rule_id": "ICL44",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL44",
+    "page": 4131
+  },
+  "ICL45": {
+    "rule_id": "ICL45",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL45",
+    "page": 4132
+  },
+  "ICL48": {
+    "rule_id": "ICL48",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL48",
+    "page": 4133
+  },
+  "ICL49": {
+    "rule_id": "ICL49",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL49",
+    "page": 4134
+  },
+  "ICL50": {
+    "rule_id": "ICL50",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL50",
+    "page": 4135
+  },
+  "ICL51": {
+    "rule_id": "ICL51",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL51",
+    "page": 4136
+  },
+  "ICL52": {
+    "rule_id": "ICL52",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL52",
+    "page": 4137
+  },
+  "ICL53": {
+    "rule_id": "ICL53",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL53",
+    "page": 4138
+  },
+  "ICL54": {
+    "rule_id": "ICL54",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL54",
+    "page": 4139
+  },
+  "ICL55": {
+    "rule_id": "ICL55",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL55",
+    "page": 4140
+  },
+  "ICL56": {
+    "rule_id": "ICL56",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL56",
+    "page": 4141
+  },
+  "ICL57": {
+    "rule_id": "ICL57",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL57",
+    "page": 4142
+  },
+  "ICL58": {
+    "rule_id": "ICL58",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL58",
+    "page": 4144
+  },
+  "ICL59": {
+    "rule_id": "ICL59",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL59",
+    "page": 4145
+  },
+  "ICL60": {
+    "rule_id": "ICL60",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL60",
+    "page": 4146
+  },
+  "ICL61": {
+    "rule_id": "ICL61",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL61",
+    "page": 4147
+  },
+  "ICL62": {
+    "rule_id": "ICL62",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL62",
+    "page": 4148
+  },
+  "ICL63": {
+    "rule_id": "ICL63",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL63",
+    "page": 4149
+  },
+  "ICL64": {
+    "rule_id": "ICL64",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL64",
+    "page": 4150
+  },
+  "ICL65": {
+    "rule_id": "ICL65",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL65",
+    "page": 4151
+  },
+  "ICL66": {
+    "rule_id": "ICL66",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL66",
+    "page": 4152
+  },
+  "ICL67": {
+    "rule_id": "ICL67",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL67",
+    "page": 4153
+  },
+  "ICL68": {
+    "rule_id": "ICL68",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL68",
+    "page": 4154
+  },
+  "ICL70": {
+    "rule_id": "ICL70",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL70",
+    "page": 4155
+  },
+  "ICL71": {
+    "rule_id": "ICL71",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL71",
+    "page": 4156
+  },
+  "ICL75": {
+    "rule_id": "ICL75",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL75",
+    "page": 4160
+  },
+  "ICL76": {
+    "rule_id": "ICL76",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL76",
+    "page": 4162
+  },
+  "ICL77": {
+    "rule_id": "ICL77",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL77",
+    "page": 4163
+  },
+  "ICL78": {
+    "rule_id": "ICL78",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL78",
+    "page": 4164
+  },
+  "ICL79": {
+    "rule_id": "ICL79",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL79",
+    "page": 4165
+  },
+  "ICL80": {
+    "rule_id": "ICL80",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL80",
+    "page": 4166
+  },
+  "ICL81": {
+    "rule_id": "ICL81",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL81",
+    "page": 4171
+  },
+  "ICL82": {
+    "rule_id": "ICL82",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL82",
+    "page": 4172
+  },
+  "ICL83": {
+    "rule_id": "ICL83",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL83",
+    "page": 4173
+  },
+  "ICL84": {
+    "rule_id": "ICL84",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL84",
+    "page": 4174
+  },
+  "ICL85": {
+    "rule_id": "ICL85",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL85",
+    "page": 4175
+  },
+  "ICL86": {
+    "rule_id": "ICL86",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL86",
+    "page": 4176
+  },
+  "ICL87": {
+    "rule_id": "ICL87",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL87",
+    "page": 4177
+  },
+  "ICL88": {
+    "rule_id": "ICL88",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL88",
+    "page": 4178
+  },
+  "ICL89": {
+    "rule_id": "ICL89",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL89",
+    "page": 4179
+  },
+  "ICL90": {
+    "rule_id": "ICL90",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL90",
+    "page": 4180
+  },
+  "ICL91": {
+    "rule_id": "ICL91",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL91",
+    "page": 4181
+  },
+  "ICL92": {
+    "rule_id": "ICL92",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL92",
+    "page": 4182
+  },
+  "ICL93": {
+    "rule_id": "ICL93",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL93",
+    "page": 4183
+  },
+  "ICL94": {
+    "rule_id": "ICL94",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL94",
+    "page": 4184
+  },
+  "ICL95": {
+    "rule_id": "ICL95",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL95",
+    "page": 4185
+  },
+  "ICL96": {
+    "rule_id": "ICL96",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL96",
+    "page": 4186
+  },
+  "ICL97": {
+    "rule_id": "ICL97",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL97",
+    "page": 4187
+  },
+  "ICL98": {
+    "rule_id": "ICL98",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL98",
+    "page": 4188
+  },
+  "ICL99": {
+    "rule_id": "ICL99",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL99",
+    "page": 4189
+  },
+  "ICL100": {
+    "rule_id": "ICL100",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL100",
+    "page": 4190
+  },
+  "ICL101": {
+    "rule_id": "ICL101",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL101",
+    "page": 4191
+  },
+  "ICL102": {
+    "rule_id": "ICL102",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL102",
+    "page": 4192
+  },
+  "ICL103": {
+    "rule_id": "ICL103",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL103",
+    "page": 4193
+  },
+  "ICL104": {
+    "rule_id": "ICL104",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL104",
+    "page": 4194
+  },
+  "ICL105": {
+    "rule_id": "ICL105",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL105",
+    "page": 4195
+  },
+  "ICL106": {
+    "rule_id": "ICL106",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL106",
+    "page": 4196
+  },
+  "ICL107": {
+    "rule_id": "ICL107",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL107",
+    "page": 4197
+  },
+  "ICL108": {
+    "rule_id": "ICL108",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL108",
+    "page": 4198
+  },
+  "ICL109": {
+    "rule_id": "ICL109",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL109",
+    "page": 4199
+  },
+  "ICL110": {
+    "rule_id": "ICL110",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL110",
+    "page": 4200
+  },
+  "ICL111": {
+    "rule_id": "ICL111",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL111",
+    "page": 4201
+  },
+  "ICL112": {
+    "rule_id": "ICL112",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL112",
+    "page": 4202
+  },
+  "ICL113": {
+    "rule_id": "ICL113",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL113",
+    "page": 4203
+  },
+  "ICL114": {
+    "rule_id": "ICL114",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL114",
+    "page": 4204
+  },
+  "ICL115": {
+    "rule_id": "ICL115",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL115",
+    "page": 4205
+  },
+  "ICL116": {
+    "rule_id": "ICL116",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL116",
+    "page": 4206
+  },
+  "ICL117": {
+    "rule_id": "ICL117",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL117",
+    "page": 4207
+  },
+  "ICL118": {
+    "rule_id": "ICL118",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL118",
+    "page": 4208
+  },
+  "ICL119": {
+    "rule_id": "ICL119",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL119",
+    "page": 4209
+  },
+  "ICL120": {
+    "rule_id": "ICL120",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL120",
+    "page": 4210
+  },
+  "ICL121": {
+    "rule_id": "ICL121",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL121",
+    "page": 4211
+  },
+  "ICL122": {
+    "rule_id": "ICL122",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL122",
+    "page": 4212
+  },
+  "ICL123": {
+    "rule_id": "ICL123",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL123",
+    "page": 4213
+  },
+  "ICL124": {
+    "rule_id": "ICL124",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL124",
+    "page": 4214
+  },
+  "ICL125": {
+    "rule_id": "ICL125",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL125",
+    "page": 4215
+  },
+  "ICL126": {
+    "rule_id": "ICL126",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL126",
+    "page": 4216
+  },
+  "ICL127": {
+    "rule_id": "ICL127",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL127",
+    "page": 4217
+  },
+  "ICL128": {
+    "rule_id": "ICL128",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL128",
+    "page": 4218
+  },
+  "ICL129": {
+    "rule_id": "ICL129",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL129",
+    "page": 4219
+  },
+  "ICL130": {
+    "rule_id": "ICL130",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL130",
+    "page": 4220
+  },
+  "ICL132": {
+    "rule_id": "ICL132",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL132",
+    "page": 4221
+  },
+  "ICL133": {
+    "rule_id": "ICL133",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL133",
+    "page": 4222
+  },
+  "ICL134": {
+    "rule_id": "ICL134",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL134",
+    "page": 4223
+  },
+  "ICL135": {
+    "rule_id": "ICL135",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL135",
+    "page": 4225
+  },
+  "ICL136": {
+    "rule_id": "ICL136",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL136",
+    "page": 4226
+  },
+  "ICL137": {
+    "rule_id": "ICL137",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL137",
+    "page": 4227
+  },
+  "ICL138": {
+    "rule_id": "ICL138",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL138",
+    "page": 4228
+  },
+  "ICL139": {
+    "rule_id": "ICL139",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL139",
+    "page": 4229
+  },
+  "ICL140": {
+    "rule_id": "ICL140",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL140",
+    "page": 4230
+  },
+  "ICL141": {
+    "rule_id": "ICL141",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL141",
+    "page": 4232
+  },
+  "ICL142": {
+    "rule_id": "ICL142",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL142",
+    "page": 4233
+  },
+  "ICL143": {
+    "rule_id": "ICL143",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL143",
+    "page": 4234
+  },
+  "ICL144": {
+    "rule_id": "ICL144",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL144",
+    "page": 4235
+  },
+  "ICL148": {
+    "rule_id": "ICL148",
+    "family": "ICL Semantic Rules (ICL Rules)",
+    "title": "ICL148",
+    "page": 4236
+  },
+  "K1": {
+    "rule_id": "K1",
+    "family": "EDT Rules (K Rules)",
+    "title": "K1",
+    "page": 4240
+  },
+  "K2": {
+    "rule_id": "K2",
+    "family": "EDT Rules (K Rules)",
+    "title": "K2",
+    "page": 4241
+  },
+  "K3": {
+    "rule_id": "K3",
+    "family": "EDT Rules (K Rules)",
+    "title": "K3",
+    "page": 4242
+  },
+  "K4": {
+    "rule_id": "K4",
+    "family": "EDT Rules (K Rules)",
+    "title": "K4",
+    "page": 4243
+  },
+  "K5": {
+    "rule_id": "K5",
+    "family": "EDT Rules (K Rules)",
+    "title": "K5",
+    "page": 4244
+  },
+  "K6": {
+    "rule_id": "K6",
+    "family": "EDT Rules (K Rules)",
+    "title": "K6",
+    "page": 4245
+  },
+  "K7": {
+    "rule_id": "K7",
+    "family": "EDT Rules (K Rules)",
+    "title": "K7",
+    "page": 4247
+  },
+  "K8": {
+    "rule_id": "K8",
+    "family": "EDT Rules (K Rules)",
+    "title": "K8",
+    "page": 4248
+  },
+  "K9": {
+    "rule_id": "K9",
+    "family": "EDT Rules (K Rules)",
+    "title": "K9",
+    "page": 4249
+  },
+  "K10": {
+    "rule_id": "K10",
+    "family": "EDT Rules (K Rules)",
+    "title": "K10",
+    "page": 4251
+  },
+  "K11": {
+    "rule_id": "K11",
+    "family": "EDT Rules (K Rules)",
+    "title": "K11",
+    "page": 4252
+  },
+  "K12": {
+    "rule_id": "K12",
+    "family": "EDT Rules (K Rules)",
+    "title": "K12",
+    "page": 4253
+  },
+  "K13": {
+    "rule_id": "K13",
+    "family": "EDT Rules (K Rules)",
+    "title": "K13",
+    "page": 4254
+  },
+  "K14": {
+    "rule_id": "K14",
+    "family": "EDT Rules (K Rules)",
+    "title": "K14",
+    "page": 4255
+  },
+  "K15": {
+    "rule_id": "K15",
+    "family": "EDT Rules (K Rules)",
+    "title": "K15",
+    "page": 4256
+  },
+  "K16": {
+    "rule_id": "K16",
+    "family": "EDT Rules (K Rules)",
+    "title": "K16",
+    "page": 4262
+  },
+  "K17": {
+    "rule_id": "K17",
+    "family": "EDT Rules (K Rules)",
+    "title": "K17",
+    "page": 4263
+  },
+  "K18": {
+    "rule_id": "K18",
+    "family": "EDT Rules (K Rules)",
+    "title": "K18",
+    "page": 4264
+  },
+  "K19": {
+    "rule_id": "K19",
+    "family": "EDT Rules (K Rules)",
+    "title": "K19",
+    "page": 4265
+  },
+  "K20": {
+    "rule_id": "K20",
+    "family": "EDT Rules (K Rules)",
+    "title": "K20",
+    "page": 4267
+  },
+  "K21": {
+    "rule_id": "K21",
+    "family": "EDT Rules (K Rules)",
+    "title": "K21",
+    "page": 4268
+  },
+  "K22": {
+    "rule_id": "K22",
+    "family": "EDT Rules (K Rules)",
+    "title": "K22",
+    "page": 4269
+  },
+  "K23": {
+    "rule_id": "K23",
+    "family": "EDT Rules (K Rules)",
+    "title": "K23",
+    "page": 4271
+  },
+  "K24": {
+    "rule_id": "K24",
+    "family": "EDT Rules (K Rules)",
+    "title": "K24",
+    "page": 4272
+  },
+  "K25": {
+    "rule_id": "K25",
+    "family": "EDT Rules (K Rules)",
+    "title": "K25",
+    "page": 4273
+  },
+  "P1": {
+    "rule_id": "P1",
+    "family": "Procedure Rules (P Rules)",
+    "title": "P1",
+    "page": 4282
+  },
+  "P2": {
+    "rule_id": "P2",
+    "family": "Procedure Rules (P Rules)",
+    "title": "P2",
+    "page": 4283
+  },
+  "P3": {
+    "rule_id": "P3",
+    "family": "Procedure Rules (P Rules)",
+    "title": "P3",
+    "page": 4284
+  },
+  "P4": {
+    "rule_id": "P4",
+    "family": "Procedure Rules (P Rules)",
+    "title": "P4",
+    "page": 4285
+  },
+  "P5": {
+    "rule_id": "P5",
+    "family": "Procedure Rules (P Rules)",
+    "title": "P5",
+    "page": 4286
+  },
+  "P6": {
+    "rule_id": "P6",
+    "family": "Procedure Rules (P Rules)",
+    "title": "P6",
+    "page": 4287
+  },
+  "P7": {
+    "rule_id": "P7",
+    "family": "Procedure Rules (P Rules)",
+    "title": "P7",
+    "page": 4288
+  },
+  "P8": {
+    "rule_id": "P8",
+    "family": "Procedure Rules (P Rules)",
+    "title": "P8",
+    "page": 4289
+  },
+  "P9": {
+    "rule_id": "P9",
+    "family": "Procedure Rules (P Rules)",
+    "title": "P9",
+    "page": 4290
+  },
+  "P10": {
+    "rule_id": "P10",
+    "family": "Procedure Rules (P Rules)",
+    "title": "P10",
+    "page": 4291
+  },
+  "P11": {
+    "rule_id": "P11",
+    "family": "Procedure Rules (P Rules)",
+    "title": "P11",
+    "page": 4292
+  },
+  "P12": {
+    "rule_id": "P12",
+    "family": "Procedure Rules (P Rules)",
+    "title": "P12",
+    "page": 4293
+  },
+  "P13": {
+    "rule_id": "P13",
+    "family": "Procedure Rules (P Rules)",
+    "title": "P13",
+    "page": 4294
+  },
+  "P14": {
+    "rule_id": "P14",
+    "family": "Procedure Rules (P Rules)",
+    "title": "P14",
+    "page": 4295
+  },
+  "P15": {
+    "rule_id": "P15",
+    "family": "Procedure Rules (P Rules)",
+    "title": "P15",
+    "page": 4296
+  },
+  "P16": {
+    "rule_id": "P16",
+    "family": "Procedure Rules (P Rules)",
+    "title": "P16",
+    "page": 4297
+  },
+  "P17": {
+    "rule_id": "P17",
+    "family": "Procedure Rules (P Rules)",
+    "title": "P17",
+    "page": 4298
+  },
+  "P18": {
+    "rule_id": "P18",
+    "family": "Procedure Rules (P Rules)",
+    "title": "P18",
+    "page": 4299
+  },
+  "P19": {
+    "rule_id": "P19",
+    "family": "Procedure Rules (P Rules)",
+    "title": "P19",
+    "page": 4300
+  },
+  "P20": {
+    "rule_id": "P20",
+    "family": "Procedure Rules (P Rules)",
+    "title": "P20",
+    "page": 4301
+  },
+  "P21": {
+    "rule_id": "P21",
+    "family": "Procedure Rules (P Rules)",
+    "title": "P21",
+    "page": 4302
+  },
+  "P22": {
+    "rule_id": "P22",
+    "family": "Procedure Rules (P Rules)",
+    "title": "P22",
+    "page": 4303
+  },
+  "P23": {
+    "rule_id": "P23",
+    "family": "Procedure Rules (P Rules)",
+    "title": "P23",
+    "page": 4304
+  },
+  "P24": {
+    "rule_id": "P24",
+    "family": "Procedure Rules (P Rules)",
+    "title": "P24",
+    "page": 4305
+  },
+  "P25": {
+    "rule_id": "P25",
+    "family": "Procedure Rules (P Rules)",
+    "title": "P25",
+    "page": 4306
+  },
+  "P26": {
+    "rule_id": "P26",
+    "family": "Procedure Rules (P Rules)",
+    "title": "P26",
+    "page": 4307
+  },
+  "P27": {
+    "rule_id": "P27",
+    "family": "Procedure Rules (P Rules)",
+    "title": "P27",
+    "page": 4308
+  },
+  "P28": {
+    "rule_id": "P28",
+    "family": "Procedure Rules (P Rules)",
+    "title": "P28",
+    "page": 4309
+  },
+  "P29": {
+    "rule_id": "P29",
+    "family": "Procedure Rules (P Rules)",
+    "title": "P29",
+    "page": 4310
+  },
+  "P30": {
+    "rule_id": "P30",
+    "family": "Procedure Rules (P Rules)",
+    "title": "P30",
+    "page": 4311
+  },
+  "P31": {
+    "rule_id": "P31",
+    "family": "Procedure Rules (P Rules)",
+    "title": "P31",
+    "page": 4312
+  },
+  "P32": {
+    "rule_id": "P32",
+    "family": "Procedure Rules (P Rules)",
+    "title": "P32",
+    "page": 4313
+  },
+  "P33": {
+    "rule_id": "P33",
+    "family": "Procedure Rules (P Rules)",
+    "title": "P33",
+    "page": 4314
+  },
+  "P34": {
+    "rule_id": "P34",
+    "family": "Procedure Rules (P Rules)",
+    "title": "P34",
+    "page": 4315
+  },
+  "P35": {
+    "rule_id": "P35",
+    "family": "Procedure Rules (P Rules)",
+    "title": "P35",
+    "page": 4316
+  },
+  "P36": {
+    "rule_id": "P36",
+    "family": "Procedure Rules (P Rules)",
+    "title": "P36",
+    "page": 4317
+  },
+  "P37": {
+    "rule_id": "P37",
+    "family": "Procedure Rules (P Rules)",
+    "title": "P37",
+    "page": 4318
+  },
+  "P38": {
+    "rule_id": "P38",
+    "family": "Procedure Rules (P Rules)",
+    "title": "P38",
+    "page": 4319
+  },
+  "P39": {
+    "rule_id": "P39",
+    "family": "Procedure Rules (P Rules)",
+    "title": "P39",
+    "page": 4320
+  },
+  "P40": {
+    "rule_id": "P40",
+    "family": "Procedure Rules (P Rules)",
+    "title": "P40",
+    "page": 4321
+  },
+  "P41": {
+    "rule_id": "P41",
+    "family": "Procedure Rules (P Rules)",
+    "title": "P41",
+    "page": 4322
+  },
+  "P42": {
+    "rule_id": "P42",
+    "family": "Procedure Rules (P Rules)",
+    "title": "P42",
+    "page": 4323
+  },
+  "P43": {
+    "rule_id": "P43",
+    "family": "Procedure Rules (P Rules)",
+    "title": "P43",
+    "page": 4324
+  },
+  "P44": {
+    "rule_id": "P44",
+    "family": "Procedure Rules (P Rules)",
+    "title": "P44",
+    "page": 4325
+  },
+  "P45": {
+    "rule_id": "P45",
+    "family": "Procedure Rules (P Rules)",
+    "title": "P45",
+    "page": 4326
+  },
+  "P46": {
+    "rule_id": "P46",
+    "family": "Procedure Rules (P Rules)",
+    "title": "P46",
+    "page": 4327
+  },
+  "P47": {
+    "rule_id": "P47",
+    "family": "Procedure Rules (P Rules)",
+    "title": "P47",
+    "page": 4328
+  },
+  "P48": {
+    "rule_id": "P48",
+    "family": "Procedure Rules (P Rules)",
+    "title": "P48",
+    "page": 4329
+  },
+  "P49": {
+    "rule_id": "P49",
+    "family": "Procedure Rules (P Rules)",
+    "title": "P49",
+    "page": 4330
+  },
+  "P50": {
+    "rule_id": "P50",
+    "family": "Procedure Rules (P Rules)",
+    "title": "P50",
+    "page": 4331
+  },
+  "P51": {
+    "rule_id": "P51",
+    "family": "Procedure Rules (P Rules)",
+    "title": "P51",
+    "page": 4332
+  },
+  "P52": {
+    "rule_id": "P52",
+    "family": "Procedure Rules (P Rules)",
+    "title": "P52",
+    "page": 4333
+  },
+  "P53": {
+    "rule_id": "P53",
+    "family": "Procedure Rules (P Rules)",
+    "title": "P53",
+    "page": 4334
+  },
+  "P54": {
+    "rule_id": "P54",
+    "family": "Procedure Rules (P Rules)",
+    "title": "P54",
+    "page": 4336
+  },
+  "P55": {
+    "rule_id": "P55",
+    "family": "Procedure Rules (P Rules)",
+    "title": "P55",
+    "page": 4337
+  },
+  "P56": {
+    "rule_id": "P56",
+    "family": "Procedure Rules (P Rules)",
+    "title": "P56",
+    "page": 4338
+  },
+  "P58": {
+    "rule_id": "P58",
+    "family": "Procedure Rules (P Rules)",
+    "title": "P58",
+    "page": 4339
+  },
+  "P59": {
+    "rule_id": "P59",
+    "family": "Procedure Rules (P Rules)",
+    "title": "P59",
+    "page": 4340
+  },
+  "P60": {
+    "rule_id": "P60",
+    "family": "Procedure Rules (P Rules)",
+    "title": "P60",
+    "page": 4341
+  },
+  "P61": {
+    "rule_id": "P61",
+    "family": "Procedure Rules (P Rules)",
+    "title": "P61",
+    "page": 4343
+  },
+  "P62": {
+    "rule_id": "P62",
+    "family": "Procedure Rules (P Rules)",
+    "title": "P62",
+    "page": 4344
+  },
+  "P63": {
+    "rule_id": "P63",
+    "family": "Procedure Rules (P Rules)",
+    "title": "P63",
+    "page": 4345
+  },
+  "P64": {
+    "rule_id": "P64",
+    "family": "Procedure Rules (P Rules)",
+    "title": "P64",
+    "page": 4346
+  },
+  "P65": {
+    "rule_id": "P65",
+    "family": "Procedure Rules (P Rules)",
+    "title": "P65",
+    "page": 4347
+  },
+  "P66": {
+    "rule_id": "P66",
+    "family": "Procedure Rules (P Rules)",
+    "title": "P66",
+    "page": 4348
+  },
+  "P70": {
+    "rule_id": "P70",
+    "family": "Procedure Rules (P Rules)",
+    "title": "P70",
+    "page": 4349
+  },
+  "P71": {
+    "rule_id": "P71",
+    "family": "Procedure Rules (P Rules)",
+    "title": "P71",
+    "page": 4350
+  },
+  "P72": {
+    "rule_id": "P72",
+    "family": "Procedure Rules (P Rules)",
+    "title": "P72",
+    "page": 4351
+  },
+  "P73": {
+    "rule_id": "P73",
+    "family": "Procedure Rules (P Rules)",
+    "title": "P73",
+    "page": 4352
+  },
+  "P74": {
+    "rule_id": "P74",
+    "family": "Procedure Rules (P Rules)",
+    "title": "P74",
+    "page": 4353
+  },
+  "P75": {
+    "rule_id": "P75",
+    "family": "Procedure Rules (P Rules)",
+    "title": "P75",
+    "page": 4354
+  },
+  "P76": {
+    "rule_id": "P76",
+    "family": "Procedure Rules (P Rules)",
+    "title": "P76",
+    "page": 4355
+  },
+  "P77": {
+    "rule_id": "P77",
+    "family": "Procedure Rules (P Rules)",
+    "title": "P77",
+    "page": 4356
+  },
+  "P78": {
+    "rule_id": "P78",
+    "family": "Procedure Rules (P Rules)",
+    "title": "P78",
+    "page": 4357
+  },
+  "P79": {
+    "rule_id": "P79",
+    "family": "Procedure Rules (P Rules)",
+    "title": "P79",
+    "page": 4358
+  },
+  "P80": {
+    "rule_id": "P80",
+    "family": "Procedure Rules (P Rules)",
+    "title": "P80",
+    "page": 4359
+  },
+  "P81": {
+    "rule_id": "P81",
+    "family": "Procedure Rules (P Rules)",
+    "title": "P81",
+    "page": 4360
+  },
+  "P82": {
+    "rule_id": "P82",
+    "family": "Procedure Rules (P Rules)",
+    "title": "P82",
+    "page": 4361
+  },
+  "P83": {
+    "rule_id": "P83",
+    "family": "Procedure Rules (P Rules)",
+    "title": "P83",
+    "page": 4362
+  },
+  "P84": {
+    "rule_id": "P84",
+    "family": "Procedure Rules (P Rules)",
+    "title": "P84",
+    "page": 4363
+  },
+  "P85": {
+    "rule_id": "P85",
+    "family": "Procedure Rules (P Rules)",
+    "title": "P85",
+    "page": 4364
+  },
+  "P86": {
+    "rule_id": "P86",
+    "family": "Procedure Rules (P Rules)",
+    "title": "P86",
+    "page": 4365
+  },
+  "P87": {
+    "rule_id": "P87",
+    "family": "Procedure Rules (P Rules)",
+    "title": "P87",
+    "page": 4366
+  },
+  "P88": {
+    "rule_id": "P88",
+    "family": "Procedure Rules (P Rules)",
+    "title": "P88",
+    "page": 4367
+  },
+  "P89": {
+    "rule_id": "P89",
+    "family": "Procedure Rules (P Rules)",
+    "title": "P89",
+    "page": 4368
+  },
+  "P90": {
+    "rule_id": "P90",
+    "family": "Procedure Rules (P Rules)",
+    "title": "P90",
+    "page": 4369
+  },
+  "P91": {
+    "rule_id": "P91",
+    "family": "Procedure Rules (P Rules)",
+    "title": "P91",
+    "page": 4370
+  },
+  "P92": {
+    "rule_id": "P92",
+    "family": "Procedure Rules (P Rules)",
+    "title": "P92",
+    "page": 4371
+  },
+  "P93": {
+    "rule_id": "P93",
+    "family": "Procedure Rules (P Rules)",
+    "title": "P93",
+    "page": 4372
+  },
+  "P94": {
+    "rule_id": "P94",
+    "family": "Procedure Rules (P Rules)",
+    "title": "P94",
+    "page": 4373
+  },
+  "P96": {
+    "rule_id": "P96",
+    "family": "Procedure Rules (P Rules)",
+    "title": "P96",
+    "page": 4376
+  },
+  "P97": {
+    "rule_id": "P97",
+    "family": "Procedure Rules (P Rules)",
+    "title": "P97",
+    "page": 4379
+  },
+  "P98": {
+    "rule_id": "P98",
+    "family": "Procedure Rules (P Rules)",
+    "title": "P98",
+    "page": 4381
+  },
+  "R1": {
+    "rule_id": "R1",
+    "family": "Core Mapping for ATPG and Scan Pattern Retargeting Rules (R Rules)",
+    "title": "R1",
+    "page": 4384
+  },
+  "R2": {
+    "rule_id": "R2",
+    "family": "Core Mapping for ATPG and Scan Pattern Retargeting Rules (R Rules)",
+    "title": "R2",
+    "page": 4385
+  },
+  "R3": {
+    "rule_id": "R3",
+    "family": "Core Mapping for ATPG and Scan Pattern Retargeting Rules (R Rules)",
+    "title": "R3",
+    "page": 4386
+  },
+  "R4": {
+    "rule_id": "R4",
+    "family": "Core Mapping for ATPG and Scan Pattern Retargeting Rules (R Rules)",
+    "title": "R4",
+    "page": 4387
+  },
+  "R5": {
+    "rule_id": "R5",
+    "family": "Core Mapping for ATPG and Scan Pattern Retargeting Rules (R Rules)",
+    "title": "R5",
+    "page": 4388
+  },
+  "R6": {
+    "rule_id": "R6",
+    "family": "Core Mapping for ATPG and Scan Pattern Retargeting Rules (R Rules)",
+    "title": "R6",
+    "page": 4389
+  },
+  "R7": {
+    "rule_id": "R7",
+    "family": "Core Mapping for ATPG and Scan Pattern Retargeting Rules (R Rules)",
+    "title": "R7",
+    "page": 4390
+  },
+  "R8": {
+    "rule_id": "R8",
+    "family": "Core Mapping for ATPG and Scan Pattern Retargeting Rules (R Rules)",
+    "title": "R8",
+    "page": 4391
+  },
+  "R9": {
+    "rule_id": "R9",
+    "family": "Core Mapping for ATPG and Scan Pattern Retargeting Rules (R Rules)",
+    "title": "R9",
+    "page": 4394
+  },
+  "R10": {
+    "rule_id": "R10",
+    "family": "Core Mapping for ATPG and Scan Pattern Retargeting Rules (R Rules)",
+    "title": "R10",
+    "page": 4396
+  },
+  "R11": {
+    "rule_id": "R11",
+    "family": "Core Mapping for ATPG and Scan Pattern Retargeting Rules (R Rules)",
+    "title": "R11",
+    "page": 4397
+  },
+  "R12": {
+    "rule_id": "R12",
+    "family": "Core Mapping for ATPG and Scan Pattern Retargeting Rules (R Rules)",
+    "title": "R12",
+    "page": 4398
+  },
+  "R13": {
+    "rule_id": "R13",
+    "family": "Core Mapping for ATPG and Scan Pattern Retargeting Rules (R Rules)",
+    "title": "R13",
+    "page": 4399
+  },
+  "R14": {
+    "rule_id": "R14",
+    "family": "Core Mapping for ATPG and Scan Pattern Retargeting Rules (R Rules)",
+    "title": "R14",
+    "page": 4400
+  },
+  "R15": {
+    "rule_id": "R15",
+    "family": "Core Mapping for ATPG and Scan Pattern Retargeting Rules (R Rules)",
+    "title": "R15",
+    "page": 4402
+  },
+  "R16": {
+    "rule_id": "R16",
+    "family": "Core Mapping for ATPG and Scan Pattern Retargeting Rules (R Rules)",
+    "title": "R16",
+    "page": 4405
+  },
+  "R17": {
+    "rule_id": "R17",
+    "family": "Core Mapping for ATPG and Scan Pattern Retargeting Rules (R Rules)",
+    "title": "R17",
+    "page": 4407
+  },
+  "R18": {
+    "rule_id": "R18",
+    "family": "Core Mapping for ATPG and Scan Pattern Retargeting Rules (R Rules)",
+    "title": "R18",
+    "page": 4408
+  },
+  "R19": {
+    "rule_id": "R19",
+    "family": "Core Mapping for ATPG and Scan Pattern Retargeting Rules (R Rules)",
+    "title": "R19",
+    "page": 4410
+  },
+  "R20": {
+    "rule_id": "R20",
+    "family": "Core Mapping for ATPG and Scan Pattern Retargeting Rules (R Rules)",
+    "title": "R20",
+    "page": 4411
+  },
+  "R21": {
+    "rule_id": "R21",
+    "family": "Core Mapping for ATPG and Scan Pattern Retargeting Rules (R Rules)",
+    "title": "R21",
+    "page": 4412
+  },
+  "R22": {
+    "rule_id": "R22",
+    "family": "Core Mapping for ATPG and Scan Pattern Retargeting Rules (R Rules)",
+    "title": "R22",
+    "page": 4413
+  },
+  "R23": {
+    "rule_id": "R23",
+    "family": "Core Mapping for ATPG and Scan Pattern Retargeting Rules (R Rules)",
+    "title": "R23",
+    "page": 4414
+  },
+  "R27": {
+    "rule_id": "R27",
+    "family": "Core Mapping for ATPG and Scan Pattern Retargeting Rules (R Rules)",
+    "title": "R27",
+    "page": 4415
+  },
+  "R28": {
+    "rule_id": "R28",
+    "family": "Core Mapping for ATPG and Scan Pattern Retargeting Rules (R Rules)",
+    "title": "R28",
+    "page": 4417
+  },
+  "R30": {
+    "rule_id": "R30",
+    "family": "Core Mapping for ATPG and Scan Pattern Retargeting Rules (R Rules)",
+    "title": "R30",
+    "page": 4418
+  },
+  "R31": {
+    "rule_id": "R31",
+    "family": "Core Mapping for ATPG and Scan Pattern Retargeting Rules (R Rules)",
+    "title": "R31",
+    "page": 4419
+  },
+  "S1": {
+    "rule_id": "S1",
+    "family": "Scannability Rules (S Rules)",
+    "title": "S1",
+    "page": 4423
+  },
+  "S2": {
+    "rule_id": "S2",
+    "family": "Scannability Rules (S Rules)",
+    "title": "S2",
+    "page": 4425
+  },
+  "S3": {
+    "rule_id": "S3",
+    "family": "Scannability Rules (S Rules)",
+    "title": "S3",
+    "page": 4426
+  },
+  "S4": {
+    "rule_id": "S4",
+    "family": "Scannability Rules (S Rules)",
+    "title": "S4",
+    "page": 4428
+  },
+  "S5": {
+    "rule_id": "S5",
+    "family": "Scannability Rules (S Rules)",
+    "title": "S5",
+    "page": 4430
+  },
+  "S6": {
+    "rule_id": "S6",
+    "family": "Scannability Rules (S Rules)",
+    "title": "S6",
+    "page": 4431
+  },
+  "S7": {
+    "rule_id": "S7",
+    "family": "Scannability Rules (S Rules)",
+    "title": "S7",
+    "page": 4433
+  },
+  "S8": {
+    "rule_id": "S8",
+    "family": "Scannability Rules (S Rules)",
+    "title": "S8",
+    "page": 4434
+  },
+  "SW1": {
+    "rule_id": "SW1",
+    "family": "Scan-Wrapper Rules (SW Rules)",
+    "title": "SW1",
+    "page": 4436
+  },
+  "SW2": {
+    "rule_id": "SW2",
+    "family": "Scan-Wrapper Rules (SW Rules)",
+    "title": "SW2",
+    "page": 4437
+  },
+  "SW3": {
+    "rule_id": "SW3",
+    "family": "Scan-Wrapper Rules (SW Rules)",
+    "title": "SW3",
+    "page": 4438
+  },
+  "SW4": {
+    "rule_id": "SW4",
+    "family": "Scan-Wrapper Rules (SW Rules)",
+    "title": "SW4",
+    "page": 4439
+  },
+  "SW5": {
+    "rule_id": "SW5",
+    "family": "Scan-Wrapper Rules (SW Rules)",
+    "title": "SW5",
+    "page": 4440
+  },
+  "SW6": {
+    "rule_id": "SW6",
+    "family": "Scan-Wrapper Rules (SW Rules)",
+    "title": "SW6",
+    "page": 4442
+  },
+  "SW7": {
+    "rule_id": "SW7",
+    "family": "Scan-Wrapper Rules (SW Rules)",
+    "title": "SW7",
+    "page": 4443
+  },
+  "SW8": {
+    "rule_id": "SW8",
+    "family": "Scan-Wrapper Rules (SW Rules)",
+    "title": "SW8",
+    "page": 4446
+  },
+  "SW11": {
+    "rule_id": "SW11",
+    "family": "Scan-Wrapper Rules (SW Rules)",
+    "title": "SW11",
+    "page": 4447
+  },
+  "SSN_ICL2": {
+    "rule_id": "SSN_ICL2",
+    "family": "SSN ICL Rules (SSN_ICL Rules)",
+    "title": "SSN_ICL2",
+    "page": 4449
+  },
+  "SSN_ICL3": {
+    "rule_id": "SSN_ICL3",
+    "family": "SSN ICL Rules (SSN_ICL Rules)",
+    "title": "SSN_ICL3",
+    "page": 4451
+  },
+  "SSN_ICL15": {
+    "rule_id": "SSN_ICL15",
+    "family": "SSN ICL Rules (SSN_ICL Rules)",
+    "title": "SSN_ICL15",
+    "page": 4453
+  },
+  "SSN_ICL16": {
+    "rule_id": "SSN_ICL16",
+    "family": "SSN ICL Rules (SSN_ICL Rules)",
+    "title": "SSN_ICL16",
+    "page": 4454
+  },
+  "SSN_ICL17": {
+    "rule_id": "SSN_ICL17",
+    "family": "SSN ICL Rules (SSN_ICL Rules)",
+    "title": "SSN_ICL17",
+    "page": 4455
+  },
+  "SSN_ICL18": {
+    "rule_id": "SSN_ICL18",
+    "family": "SSN ICL Rules (SSN_ICL Rules)",
+    "title": "SSN_ICL18",
+    "page": 4456
+  },
+  "SSN_ICL19": {
+    "rule_id": "SSN_ICL19",
+    "family": "SSN ICL Rules (SSN_ICL Rules)",
+    "title": "SSN_ICL19",
+    "page": 4457
+  },
+  "SSN_ICL20": {
+    "rule_id": "SSN_ICL20",
+    "family": "SSN ICL Rules (SSN_ICL Rules)",
+    "title": "SSN_ICL20",
+    "page": 4458
+  },
+  "SSN_ICL23": {
+    "rule_id": "SSN_ICL23",
+    "family": "SSN ICL Rules (SSN_ICL Rules)",
+    "title": "SSN_ICL23",
+    "page": 4459
+  },
+  "SSN_R1": {
+    "rule_id": "SSN_R1",
+    "family": "SSN Retargeting Rules (SSN_R Rules)",
+    "title": "SSN_R1",
+    "page": 4463
+  },
+  "SSN_R2": {
+    "rule_id": "SSN_R2",
+    "family": "SSN Retargeting Rules (SSN_R Rules)",
+    "title": "SSN_R2",
+    "page": 4464
+  },
+  "SSN_R3": {
+    "rule_id": "SSN_R3",
+    "family": "SSN Retargeting Rules (SSN_R Rules)",
+    "title": "SSN_R3",
+    "page": 4465
+  },
+  "SSN_R4": {
+    "rule_id": "SSN_R4",
+    "family": "SSN Retargeting Rules (SSN_R Rules)",
+    "title": "SSN_R4",
+    "page": 4467
+  },
+  "SSN_R5": {
+    "rule_id": "SSN_R5",
+    "family": "SSN Retargeting Rules (SSN_R Rules)",
+    "title": "SSN_R5",
+    "page": 4470
+  },
+  "SSN_R6": {
+    "rule_id": "SSN_R6",
+    "family": "SSN Retargeting Rules (SSN_R Rules)",
+    "title": "SSN_R6",
+    "page": 4472
+  },
+  "SSN_R7": {
+    "rule_id": "SSN_R7",
+    "family": "SSN Retargeting Rules (SSN_R Rules)",
+    "title": "SSN_R7",
+    "page": 4473
+  },
+  "SSN_R8": {
+    "rule_id": "SSN_R8",
+    "family": "SSN Retargeting Rules (SSN_R Rules)",
+    "title": "SSN_R8",
+    "page": 4476
+  },
+  "SSN_R9": {
+    "rule_id": "SSN_R9",
+    "family": "SSN Retargeting Rules (SSN_R Rules)",
+    "title": "SSN_R9",
+    "page": 4479
+  },
+  "SSN_R10": {
+    "rule_id": "SSN_R10",
+    "family": "SSN Retargeting Rules (SSN_R Rules)",
+    "title": "SSN_R10",
+    "page": 4481
+  },
+  "SSN_R11": {
+    "rule_id": "SSN_R11",
+    "family": "SSN Retargeting Rules (SSN_R Rules)",
+    "title": "SSN_R11",
+    "page": 4483
+  },
+  "SSN_R12": {
+    "rule_id": "SSN_R12",
+    "family": "SSN Retargeting Rules (SSN_R Rules)",
+    "title": "SSN_R12",
+    "page": 4486
+  },
+  "SSN_R13": {
+    "rule_id": "SSN_R13",
+    "family": "SSN Retargeting Rules (SSN_R Rules)",
+    "title": "SSN_R13",
+    "page": 4488
+  },
+  "SSN_R15": {
+    "rule_id": "SSN_R15",
+    "family": "SSN Retargeting Rules (SSN_R Rules)",
+    "title": "SSN_R15",
+    "page": 4489
+  },
+  "SSN_R16": {
+    "rule_id": "SSN_R16",
+    "family": "SSN Retargeting Rules (SSN_R Rules)",
+    "title": "SSN_R16",
+    "page": 4491
+  },
+  "SSN_R17": {
+    "rule_id": "SSN_R17",
+    "family": "SSN Retargeting Rules (SSN_R Rules)",
+    "title": "SSN_R17",
+    "page": 4493
+  },
+  "SSN_R18": {
+    "rule_id": "SSN_R18",
+    "family": "SSN Retargeting Rules (SSN_R Rules)",
+    "title": "SSN_R18",
+    "page": 4494
+  },
+  "SSN_R19": {
+    "rule_id": "SSN_R19",
+    "family": "SSN Retargeting Rules (SSN_R Rules)",
+    "title": "SSN_R19",
+    "page": 4497
+  },
+  "SSN_R20": {
+    "rule_id": "SSN_R20",
+    "family": "SSN Retargeting Rules (SSN_R Rules)",
+    "title": "SSN_R20",
+    "page": 4499
+  },
+  "SSN_R21": {
+    "rule_id": "SSN_R21",
+    "family": "SSN Retargeting Rules (SSN_R Rules)",
+    "title": "SSN_R21",
+    "page": 4500
+  },
+  "SSN_R23": {
+    "rule_id": "SSN_R23",
+    "family": "SSN Retargeting Rules (SSN_R Rules)",
+    "title": "SSN_R23",
+    "page": 4501
+  },
+  "SSN_R24": {
+    "rule_id": "SSN_R24",
+    "family": "SSN Retargeting Rules (SSN_R Rules)",
+    "title": "SSN_R24",
+    "page": 4502
+  },
+  "SSN_R25": {
+    "rule_id": "SSN_R25",
+    "family": "SSN Retargeting Rules (SSN_R Rules)",
+    "title": "SSN_R25",
+    "page": 4504
+  },
+  "SSN_R26": {
+    "rule_id": "SSN_R26",
+    "family": "SSN Retargeting Rules (SSN_R Rules)",
+    "title": "SSN_R26",
+    "page": 4505
+  },
+  "SSN_R28": {
+    "rule_id": "SSN_R28",
+    "family": "SSN Retargeting Rules (SSN_R Rules)",
+    "title": "SSN_R28",
+    "page": 4506
+  },
+  "SSN_R29": {
+    "rule_id": "SSN_R29",
+    "family": "SSN Retargeting Rules (SSN_R Rules)",
+    "title": "SSN_R29",
+    "page": 4507
+  },
+  "SSN_R30": {
+    "rule_id": "SSN_R30",
+    "family": "SSN Retargeting Rules (SSN_R Rules)",
+    "title": "SSN_R30",
+    "page": 4509
+  },
+  "SSN_R31": {
+    "rule_id": "SSN_R31",
+    "family": "SSN Retargeting Rules (SSN_R Rules)",
+    "title": "SSN_R31",
+    "page": 4510
+  },
+  "SSN_R32": {
+    "rule_id": "SSN_R32",
+    "family": "SSN Retargeting Rules (SSN_R Rules)",
+    "title": "SSN_R32",
+    "page": 4511
+  },
+  "SSN_R33": {
+    "rule_id": "SSN_R33",
+    "family": "SSN Retargeting Rules (SSN_R Rules)",
+    "title": "SSN_R33",
+    "page": 4512
+  },
+  "SSN_R34": {
+    "rule_id": "SSN_R34",
+    "family": "SSN Retargeting Rules (SSN_R Rules)",
+    "title": "SSN_R34",
+    "page": 4513
+  },
+  "SSN_R35": {
+    "rule_id": "SSN_R35",
+    "family": "SSN Retargeting Rules (SSN_R Rules)",
+    "title": "SSN_R35",
+    "page": 4514
+  },
+  "T1": {
+    "rule_id": "T1",
+    "family": "Scan Chain Trace Rules (T Rules)",
+    "title": "T1",
+    "page": 4518
+  },
+  "T2": {
+    "rule_id": "T2",
+    "family": "Scan Chain Trace Rules (T Rules)",
+    "title": "T2",
+    "page": 4519
+  },
+  "T3": {
+    "rule_id": "T3",
+    "family": "Scan Chain Trace Rules (T Rules)",
+    "title": "T3",
+    "page": 4520
+  },
+  "T4": {
+    "rule_id": "T4",
+    "family": "Scan Chain Trace Rules (T Rules)",
+    "title": "T4",
+    "page": 4525
+  },
+  "T5": {
+    "rule_id": "T5",
+    "family": "Scan Chain Trace Rules (T Rules)",
+    "title": "T5",
+    "page": 4529
+  },
+  "T6": {
+    "rule_id": "T6",
+    "family": "Scan Chain Trace Rules (T Rules)",
+    "title": "T6",
+    "page": 4532
+  },
+  "T8": {
+    "rule_id": "T8",
+    "family": "Scan Chain Trace Rules (T Rules)",
+    "title": "T8",
+    "page": 4533
+  },
+  "T9": {
+    "rule_id": "T9",
+    "family": "Scan Chain Trace Rules (T Rules)",
+    "title": "T9",
+    "page": 4534
+  },
+  "T10": {
+    "rule_id": "T10",
+    "family": "Scan Chain Trace Rules (T Rules)",
+    "title": "T10",
+    "page": 4535
+  },
+  "T11": {
+    "rule_id": "T11",
+    "family": "Scan Chain Trace Rules (T Rules)",
+    "title": "T11",
+    "page": 4536
+  },
+  "T12": {
+    "rule_id": "T12",
+    "family": "Scan Chain Trace Rules (T Rules)",
+    "title": "T12",
+    "page": 4537
+  },
+  "T13": {
+    "rule_id": "T13",
+    "family": "Scan Chain Trace Rules (T Rules)",
+    "title": "T13",
+    "page": 4538
+  },
+  "T14": {
+    "rule_id": "T14",
+    "family": "Scan Chain Trace Rules (T Rules)",
+    "title": "T14",
+    "page": 4539
+  },
+  "T15": {
+    "rule_id": "T15",
+    "family": "Scan Chain Trace Rules (T Rules)",
+    "title": "T15",
+    "page": 4540
+  },
+  "T16": {
+    "rule_id": "T16",
+    "family": "Scan Chain Trace Rules (T Rules)",
+    "title": "T16",
+    "page": 4541
+  },
+  "T17": {
+    "rule_id": "T17",
+    "family": "Scan Chain Trace Rules (T Rules)",
+    "title": "T17",
+    "page": 4542
+  },
+  "T18": {
+    "rule_id": "T18",
+    "family": "Scan Chain Trace Rules (T Rules)",
+    "title": "T18",
+    "page": 4543
+  },
+  "T19": {
+    "rule_id": "T19",
+    "family": "Scan Chain Trace Rules (T Rules)",
+    "title": "T19",
+    "page": 4544
+  },
+  "T20": {
+    "rule_id": "T20",
+    "family": "Scan Chain Trace Rules (T Rules)",
+    "title": "T20",
+    "page": 4545
+  },
+  "T21": {
+    "rule_id": "T21",
+    "family": "Scan Chain Trace Rules (T Rules)",
+    "title": "T21",
+    "page": 4546
+  },
+  "T22": {
+    "rule_id": "T22",
+    "family": "Scan Chain Trace Rules (T Rules)",
+    "title": "T22",
+    "page": 4547
+  },
+  "T23": {
+    "rule_id": "T23",
+    "family": "Scan Chain Trace Rules (T Rules)",
+    "title": "T23",
+    "page": 4548
+  },
+  "T24": {
+    "rule_id": "T24",
+    "family": "Scan Chain Trace Rules (T Rules)",
+    "title": "T24",
+    "page": 4549
+  },
+  "T25": {
+    "rule_id": "T25",
+    "family": "Scan Chain Trace Rules (T Rules)",
+    "title": "T25",
+    "page": 4550
+  },
+  "T26": {
+    "rule_id": "T26",
+    "family": "Scan Chain Trace Rules (T Rules)",
+    "title": "T26",
+    "page": 4552
+  },
+  "T27": {
+    "rule_id": "T27",
+    "family": "Scan Chain Trace Rules (T Rules)",
+    "title": "T27",
+    "page": 4553
+  },
+  "V1": {
+    "rule_id": "V1",
+    "family": "Power-Aware Rules (V Rules)",
+    "title": "V1",
+    "page": 4557
+  },
+  "V2": {
+    "rule_id": "V2",
+    "family": "Power-Aware Rules (V Rules)",
+    "title": "V2",
+    "page": 4558
+  },
+  "V3": {
+    "rule_id": "V3",
+    "family": "Power-Aware Rules (V Rules)",
+    "title": "V3",
+    "page": 4559
+  },
+  "V4": {
+    "rule_id": "V4",
+    "family": "Power-Aware Rules (V Rules)",
+    "title": "V4",
+    "page": 4560
+  },
+  "V5": {
+    "rule_id": "V5",
+    "family": "Power-Aware Rules (V Rules)",
+    "title": "V5",
+    "page": 4561
+  },
+  "V6": {
+    "rule_id": "V6",
+    "family": "Power-Aware Rules (V Rules)",
+    "title": "V6",
+    "page": 4562
+  },
+  "V7": {
+    "rule_id": "V7",
+    "family": "Power-Aware Rules (V Rules)",
+    "title": "V7",
+    "page": 4563
+  },
+  "V8": {
+    "rule_id": "V8",
+    "family": "Power-Aware Rules (V Rules)",
+    "title": "V8",
+    "page": 4564
+  },
+  "V9": {
+    "rule_id": "V9",
+    "family": "Power-Aware Rules (V Rules)",
+    "title": "V9",
+    "page": 4565
+  },
+  "V10": {
+    "rule_id": "V10",
+    "family": "Power-Aware Rules (V Rules)",
+    "title": "V10",
+    "page": 4566
+  },
+  "V11": {
+    "rule_id": "V11",
+    "family": "Power-Aware Rules (V Rules)",
+    "title": "V11",
+    "page": 4568
+  },
+  "V12": {
+    "rule_id": "V12",
+    "family": "Power-Aware Rules (V Rules)",
+    "title": "V12",
+    "page": 4569
+  },
+  "V13": {
+    "rule_id": "V13",
+    "family": "Power-Aware Rules (V Rules)",
+    "title": "V13",
+    "page": 4570
+  },
+  "V14": {
+    "rule_id": "V14",
+    "family": "Power-Aware Rules (V Rules)",
+    "title": "V14",
+    "page": 4571
+  },
+  "V15": {
+    "rule_id": "V15",
+    "family": "Power-Aware Rules (V Rules)",
+    "title": "V15",
+    "page": 4572
+  },
+  "V16": {
+    "rule_id": "V16",
+    "family": "Power-Aware Rules (V Rules)",
+    "title": "V16",
+    "page": 4573
+  },
+  "V17": {
+    "rule_id": "V17",
+    "family": "Power-Aware Rules (V Rules)",
+    "title": "V17",
+    "page": 4574
+  },
+  "V18": {
+    "rule_id": "V18",
+    "family": "Power-Aware Rules (V Rules)",
+    "title": "V18",
+    "page": 4575
+  },
+  "V19": {
+    "rule_id": "V19",
+    "family": "Power-Aware Rules (V Rules)",
+    "title": "V19",
+    "page": 4576
+  },
+  "V20": {
+    "rule_id": "V20",
+    "family": "Power-Aware Rules (V Rules)",
+    "title": "V20",
+    "page": 4577
+  },
+  "V21": {
+    "rule_id": "V21",
+    "family": "Power-Aware Rules (V Rules)",
+    "title": "V21",
+    "page": 4578
+  },
+  "W1": {
+    "rule_id": "W1",
+    "family": "Timing Rules (W Rules)",
+    "title": "W1",
+    "page": 4583
+  },
+  "W2": {
+    "rule_id": "W2",
+    "family": "Timing Rules (W Rules)",
+    "title": "W2",
+    "page": 4584
+  },
+  "W3": {
+    "rule_id": "W3",
+    "family": "Timing Rules (W Rules)",
+    "title": "W3",
+    "page": 4585
+  },
+  "W4": {
+    "rule_id": "W4",
+    "family": "Timing Rules (W Rules)",
+    "title": "W4",
+    "page": 4586
+  },
+  "W5": {
+    "rule_id": "W5",
+    "family": "Timing Rules (W Rules)",
+    "title": "W5",
+    "page": 4587
+  },
+  "W6": {
+    "rule_id": "W6",
+    "family": "Timing Rules (W Rules)",
+    "title": "W6",
+    "page": 4588
+  },
+  "W7": {
+    "rule_id": "W7",
+    "family": "Timing Rules (W Rules)",
+    "title": "W7",
+    "page": 4589
+  },
+  "W8": {
+    "rule_id": "W8",
+    "family": "Timing Rules (W Rules)",
+    "title": "W8",
+    "page": 4590
+  },
+  "W9": {
+    "rule_id": "W9",
+    "family": "Timing Rules (W Rules)",
+    "title": "W9",
+    "page": 4591
+  },
+  "W10": {
+    "rule_id": "W10",
+    "family": "Timing Rules (W Rules)",
+    "title": "W10",
+    "page": 4592
+  },
+  "W11": {
+    "rule_id": "W11",
+    "family": "Timing Rules (W Rules)",
+    "title": "W11",
+    "page": 4593
+  },
+  "W12": {
+    "rule_id": "W12",
+    "family": "Timing Rules (W Rules)",
+    "title": "W12",
+    "page": 4594
+  },
+  "W13": {
+    "rule_id": "W13",
+    "family": "Timing Rules (W Rules)",
+    "title": "W13",
+    "page": 4595
+  },
+  "W14": {
+    "rule_id": "W14",
+    "family": "Timing Rules (W Rules)",
+    "title": "W14",
+    "page": 4596
+  },
+  "W15": {
+    "rule_id": "W15",
+    "family": "Timing Rules (W Rules)",
+    "title": "W15",
+    "page": 4597
+  },
+  "W18": {
+    "rule_id": "W18",
+    "family": "Timing Rules (W Rules)",
+    "title": "W18",
+    "page": 4598
+  },
+  "W19": {
+    "rule_id": "W19",
+    "family": "Timing Rules (W Rules)",
+    "title": "W19",
+    "page": 4599
+  },
+  "W20": {
+    "rule_id": "W20",
+    "family": "Timing Rules (W Rules)",
+    "title": "W20",
+    "page": 4600
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "module": "serial_adder_scan",
+  "inputs": ["a", "b"],
+  "outputs": {"sum": "q0 ^ q1"},
+  "flip_flops": [
+    {"name": "q0", "d": "a ^ q1"},
+    {"name": "q1", "d": "q0 & b"}
+  ]
+}
