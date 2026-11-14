@@ -296,4 +296,10 @@ class DRCEngine:
                 book_reference="Tessent Shell Reference Manual (p. 3863, 3865)",
             ))
 
-        return violations
+        # Filter out violations whose handling is set to Ignore
+        active_violations = [
+            v for v in violations
+            if v.severity.lower() != "ignore"
+            and self.handling_overrides.get(v.rule_id.split("-")[0].upper(), "").lower() != "ignore"
+        ]
+        return active_violations

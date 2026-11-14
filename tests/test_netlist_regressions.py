@@ -77,6 +77,18 @@ class NetlistRegressionTests(unittest.TestCase):
     def test_unknown_mux_with_identical_high_impedance_inputs(self):
         self.assertEqual(mux21(Logic4.X, Logic4.Z, Logic4.Z), Logic4.Z)
 
+    def test_buf_with_z_returns_x_and_undriven_wire_is_z(self):
+        graph = parse_verilog_netlist('''module test_buf(a, y, undriven_out);
+            input a;
+            output y, undriven_out;
+            wire floating_w;
+            buf b1(y, floating_w);
+        endmodule''')
+        graph.propagate_combinational()
+        self.assertEqual(graph.nets['floating_w'], Logic4.Z)
+        self.assertEqual(graph.nets['undriven_out'], Logic4.Z)
+        self.assertEqual(graph.nets['y'], Logic4.X)
+
     @unittest.skipUnless(shutil.which('iverilog') and shutil.which('vvp'), 'Icarus not available')
     def test_generated_design_simulation_matches_icarus(self):
         rtl = insert_scan(EXAMPLE)[0]

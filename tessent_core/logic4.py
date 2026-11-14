@@ -29,6 +29,14 @@ class Logic4(Enum):
 
 
 # Truth tables for 4-state logic
+def buf4(a: Logic4) -> Logic4:
+    if a == Logic4.ZERO:
+        return Logic4.ZERO
+    if a == Logic4.ONE:
+        return Logic4.ONE
+    return Logic4.X
+
+
 def not4(a: Logic4) -> Logic4:
     if a == Logic4.ZERO:
         return Logic4.ONE

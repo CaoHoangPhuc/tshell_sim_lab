@@ -6,7 +6,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-from tessent_core.atpg import ATPGEngine, ATPGStatistics
+from tessent_core.atpg import ATPGEngine, ATPGStatistics, get_control_pins
 from tessent_core.drc import DRCEngine, DRCViolation
 from tessent_core.netlist import CircuitGraph, parse_verilog_netlist
 
@@ -42,6 +42,7 @@ class SessionFSM:
         self.atpg_engine = ATPGEngine()
         self.last_drc_violations: list[DRCViolation] = []
         self.last_statistics: ATPGStatistics = ATPGStatistics()
+        self.simulation_done: bool = False
         self.injected_anomalies: set[str] = set()
         self.raw_verilog_text: str = ""
 
@@ -87,16 +88,18 @@ class SessionFSM:
         self.pin_constraints.clear()
         self.last_drc_violations.clear()
         self.last_statistics = ATPGStatistics()
+        self.simulation_done = False
         self.atpg_engine.faults.clear()
         self.atpg_engine.patterns.clear()
         self.injected_anomalies.clear()
 
         # Default scan chain if scan ports exist
-        if "scan_in" in self.circuit.primary_inputs and "scan_out" in self.circuit.primary_outputs:
+        ctrl = get_control_pins(self.circuit)
+        if ctrl["scan_in"] and ctrl["scan_out"]:
             self.scan_chains = [{
                 "name": "chain1",
-                "scan_in": "scan_in",
-                "scan_out": "scan_out",
+                "scan_in": ctrl["scan_in"],
+                "scan_out": ctrl["scan_out"],
                 "cells": [g.name for g in self.circuit.gates.values() if g.gate_type.upper() == "DFF"],
             }]
 
@@ -109,7 +112,19 @@ class SessionFSM:
 
     def add_clock(self, pin: str, off_state: int = 0) -> str:
         self.clocks[pin] = ClockSpec(pin=pin, off_state=off_state)
+        self.last_drc_violations.clear()
         return f"//  Added clock '{pin}' with off-state={off_state}."
+
+    def delete_clock(self, pin: str) -> bool:
+        if pin in self.clocks:
+            del self.clocks[pin]
+            self.last_drc_violations.clear()
+            return True
+        return False
+
+    def delete_all_clocks(self) -> None:
+        self.clocks.clear()
+        self.last_drc_violations.clear()
 
     def run_drc(self) -> list[DRCViolation]:
         clock_dict = {p: c.off_state for p, c in self.clocks.items()}
@@ -123,6 +138,8 @@ class SessionFSM:
 
     def add_faults(self, target: str = "-all") -> str:
         count = self.atpg_engine.populate_stuck_at_faults(self.circuit)
+        self.last_statistics = ATPGStatistics()
+        self.simulation_done = False
         return f"//  Added {count} stuck-at faults on {len(self.circuit.nets)} nets/nodes."
 
     def create_patterns(self) -> list[dict[str, Any]]:
@@ -130,4 +147,5 @@ class SessionFSM:
 
     def simulate_patterns(self) -> ATPGStatistics:
         self.last_statistics = self.atpg_engine.simulate_test_patterns(self.circuit)
+        self.simulation_done = True
         return self.last_statistics

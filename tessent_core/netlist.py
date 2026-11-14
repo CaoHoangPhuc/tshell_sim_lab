@@ -8,6 +8,7 @@ from dataclasses import dataclass, field
 from tessent_core.logic4 import (
     Logic4,
     and4,
+    buf4,
     mux21,
     not4,
     or4,
@@ -43,7 +44,8 @@ class Gate:
             in_val = list(in_values.values())[0] if in_values else Logic4.X
             return not4(in_val)
         if gt == "BUF":
-            return list(in_values.values())[0] if in_values else Logic4.X
+            in_val = list(in_values.values())[0] if in_values else Logic4.X
+            return buf4(in_val)
         if gt == "AND":
             vals = list(in_values.values())
             res = vals[0] if vals else Logic4.X
@@ -142,13 +144,13 @@ class CircuitGraph:
             self.nets[name] = Logic4.X
         else:
             self.primary_outputs.add(name)
-            self.nets[name] = Logic4.X
+            self.nets[name] = Logic4.Z
 
     def add_gate(self, gate: Gate) -> None:
         self.gates[gate.name] = gate
         for net in gate.inputs.values():
             if net not in self.nets:
-                self.nets[net] = Logic4.X
+                self.nets[net] = Logic4.Z
         for net in gate.outputs.values():
             if net not in self.nets:
                 self.nets[net] = Logic4.X
@@ -396,7 +398,7 @@ class _SubsetParser:
                 elif kind == 'reg':
                     self.regs.add(name); self.graph.nets[name] = Logic4.X
                 else:
-                    self.graph.nets[name] = Logic4.X
+                    self.graph.nets[name] = Logic4.Z
         if set(ports) != self.inputs | self.outputs:
             self.fail('module ports must exactly match scalar input/output declarations')
         while self.peek() != 'endmodule':

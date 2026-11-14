@@ -171,10 +171,9 @@ class TessentShell(cmd.Cmd):
         """delete_clocks [<pin> | -all] : Delete clock definition"""
         target = arg.strip()
         if target == "-all":
-            self.fsm.clocks.clear()
+            self.fsm.delete_all_clocks()
             print("//  All clock definitions deleted.")
-        elif target in self.fsm.clocks:
-            del self.fsm.clocks[target]
+        elif self.fsm.delete_clock(target):
             print(f"//  Deleted clock '{target}'.")
         else:
             print(f"//  Notice: Clock '{target}' was not defined.")
@@ -365,6 +364,9 @@ class TessentShell(cmd.Cmd):
 
     def do_report_statistics(self, arg: str) -> None:
         """report_statistics : Display ATPG and fault coverage statistics"""
+        if not self.fsm.simulation_done:
+            print("//  No fault simulation statistics available; run 'simulate_patterns' first.")
+            return
         stats = self.fsm.last_statistics
         print("//  -------------------------------------------------------------")
         print("//  Demonstration Fault Simulation Statistics (not validated)")
@@ -408,21 +410,41 @@ class TessentShell(cmd.Cmd):
 
     def do_report_architecture(self, arg: str) -> None:
         """report_architecture : Display the full DFT System Architecture Overview"""
+        if not self.fsm.raw_verilog_text or not self.fsm.circuit.gates:
+            self.error("No design loaded. Architecture information is unavailable.")
+            return
+
+        c = self.fsm.circuit
         print("//  =============================================================")
         print("//  Tessent Hierarchical DFT System Architecture Overview")
         print("//  =============================================================")
-        print("//  1. Chip-Level / Core-Level Topology:")
-        print("//     - Design Level:           Hierarchical Block-Based (SoC)")
-        print(f"//     - Top Module:             {self.fsm.circuit.name or 'serial_adder_scan'}")
-        print("//  2. Scan Data Distribution Bus:")
-        print("//     - Network Type:           Streaming Scan Network (SSN)")
-        print("//     - Bus Width:              Packetized Multi-Core Bus")
-        print("//     - Compression:            TestKompress EDT (Decompressor + Compactor)")
-        print("//  3. Instrument Connectivity Network:")
-        print("//     - Standard:               IEEE 1687 (IJTAG) & IEEE 1149.1 (TAP)")
-        print("//     - Control Hierarchy:      Scan Insertion Bits (SIB) + TDRs")
-        print("//  4. On-Chip Clocking (OCC):")
-        print("//     - Clock Controllers:      At-Speed / Shift Mode Glitch-Free Muxing")
+        print("//  1. Design Summary:")
+        print(f"//     - Top Module:             {c.name}")
+        print(f"//     - Primary Inputs:         {len(c.primary_inputs)}")
+        print(f"//     - Primary Outputs:        {len(c.primary_outputs)}")
+        print(f"//     - Total Gates / Instances:{len(c.gates)}")
+        print(f"//     - Sequential Elements:    {len(c.scan_cells)} DFF cell(s)")
+        print("//  2. Scan Chain Architecture:")
+        if self.fsm.scan_chains:
+            for ch in self.fsm.scan_chains:
+                ch_name = ch.get("name", "chain")
+                si = ch.get("scan_in", "N/A")
+                so = ch.get("scan_out", "N/A")
+                cells_cnt = len(ch.get("cells", []))
+                print(f"//     - Scan Chain '{ch_name}': {cells_cnt} cells (in: {si}, out: {so})")
+        else:
+            print("//     - Scan Chains:            None configured")
+        print("//  3. Clock Configuration:")
+        if self.fsm.clocks:
+            for pin, clk in self.fsm.clocks.items():
+                print(f"//     - Clock '{pin}': off-state={clk.off_state}, period={clk.period}ns")
+        else:
+            print("//     - Clocks:                 None defined")
+        print("//  4. Advanced DFT Features:")
+        print("//     - Compression (EDT):      None detected in gate netlist")
+        print("//     - Packetized Bus (SSN):   None detected in gate netlist")
+        print("//     - Instruments (IJTAG):    None detected in gate netlist")
+        print("//     - On-Chip Clocking (OCC): None detected in gate netlist")
         print("//  5. Central TSDB Data Flow:")
         print(f"//     - Repository Path:        {self.tsdb_dir}")
         print("//  =============================================================")
