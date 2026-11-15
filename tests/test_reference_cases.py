@@ -62,7 +62,7 @@ class ReferenceBookTestUnits(unittest.TestCase):
         # Flip-flop whose clock is connected to clk
         circuit.add_gate(Gate("DFF1", "DFF", inputs={"clk": "clk", "d": "q"}, outputs={"Q": "q"}))
 
-        engine = DRCEngine(REF_PDF)
+        engine = DRCEngine()
 
         # When clock is defined and off-state is 0, setting clk=0 should PASS C1
         clocks = {"clk": 0}
@@ -70,11 +70,17 @@ class ReferenceBookTestUnits(unittest.TestCase):
         c1_violations = [v for v in violations if "C1" in v.rule_id]
         self.assertEqual(len(c1_violations), 0)
 
-        # If clock line is stuck active or anomaly injected
-        violations_fault = engine.run_all_checks(
-            circuit, clocks=clocks, scan_chains=[], injected_anomalies={"C1"}
-        )
-        c1_fails = [v for v in violations_fault if "C1" in v.rule_id]
+        # Off-state = 1 also passes C1
+        violations_off1 = engine.run_all_checks(circuit, clocks={"clk": 1}, scan_chains=[])
+        self.assertEqual(len([v for v in violations_off1 if "C1" in v.rule_id]), 0)
+
+        # Unforced/floating clock triggers C1
+        circuit_unforced = CircuitGraph("floating_clock")
+        circuit_unforced.add_port("clk", "in")
+        circuit_unforced.add_port("q", "out")
+        circuit_unforced.add_gate(Gate("DFF1", "DFF", inputs={"clk": "floating_net", "d": "q"}, outputs={"Q": "q"}))
+        violations_unforced = engine.run_all_checks(circuit_unforced, clocks=clocks, scan_chains=[])
+        c1_fails = [v for v in violations_unforced if "C1" in v.rule_id]
         self.assertEqual(len(c1_fails), 1)
         self.assertEqual(c1_fails[0].rule_id, "C1-1")
         self.assertIn("failed to force off", c1_fails[0].message)
@@ -90,7 +96,7 @@ class ReferenceBookTestUnits(unittest.TestCase):
         circuit.add_port("q", "out")
         circuit.add_gate(Gate("DFF1", "DFF", inputs={"clk": "clk", "d": "q"}, outputs={"Q": "q"}))
 
-        engine = DRCEngine(REF_PDF)
+        engine = DRCEngine()
         # Define both clk and floating_clk17
         clocks = {"clk": 0, "floating_clk17": 0}
         violations = engine.run_all_checks(circuit, clocks=clocks, scan_chains=[])
@@ -100,32 +106,58 @@ class ReferenceBookTestUnits(unittest.TestCase):
         self.assertIn("cannot reach the clock port", c2_fails[0].message)
 
     def test_t3_t4_t5_reference_oracles(self):
-        """Test Reference Units T3, T4, T5 (Reference Manual p. 4522-4531)."""
-        circuit = CircuitGraph("trace_circuit")
-        engine = DRCEngine(REF_PDF)
-        chains = [{"name": "chain1", "scan_in": "scan_in", "scan_out": "scan_out", "cells": ["df1", "df2"]}]
+        """Test Reference Units T3, T4, T5 (Reference Manual p. 4520-4531)."""
+        engine = DRCEngine()
 
-        # T3 Check
-        v_t3 = engine.run_all_checks(circuit, clocks={"clk": 0}, scan_chains=chains, injected_anomalies={"T3"})
+        # 1. T3: Blocked scan path (Reference Manual p. 4520)
+        c_t3 = CircuitGraph("t3_circuit")
+        c_t3.add_port("scan_in", "in")
+        c_t3.add_port("clk", "in")
+        c_t3.add_port("scan_out", "out")
+        c_t3.add_gate(Gate("df1", "DFF", inputs={"clk": "clk", "d": "scan_in"}, outputs={"Q": "q1"}))
+        c_t3.add_gate(Gate("df2", "DFF", inputs={"clk": "clk", "d": "unconnected_wire"}, outputs={"Q": "scan_out"}))
+        chains_t3 = [{"name": "chain1", "scan_in": "scan_in", "scan_out": "scan_out", "cells": ["df1", "df2"]}]
+        v_t3 = engine.run_all_checks(c_t3, clocks={"clk": 0}, scan_chains=chains_t3)
         self.assertTrue(any(v.rule_id == "T3-1" for v in v_t3))
 
-        # T4 Check
-        v_t4 = engine.run_all_checks(circuit, clocks={"clk": 0}, scan_chains=chains, injected_anomalies={"T4"})
+        # 2. T4: Memory element in scan path without active clock during shift (Reference Manual p. 4525)
+        c_t4 = CircuitGraph("t4_circuit")
+        c_t4.add_port("scan_in", "in")
+        c_t4.add_port("clk", "in")
+        c_t4.add_port("dead_clk", "in")
+        c_t4.add_port("scan_out", "out")
+        c_t4.add_gate(Gate("df1", "DFF", inputs={"clk": "dead_clk", "d": "scan_in"}, outputs={"Q": "scan_out"}))
+        c_t4.set_primary_input("dead_clk", 0)
+        chains_t4 = [{"name": "chain1", "scan_in": "scan_in", "scan_out": "scan_out", "cells": ["df1"]}]
+        v_t4 = engine.run_all_checks(c_t4, clocks={"clk": 0}, scan_chains=chains_t4)
         self.assertTrue(any(v.rule_id == "T4-1" for v in v_t4))
 
-        # T5 Check
-        v_t5 = engine.run_all_checks(circuit, clocks={"clk": 0}, scan_chains=chains, injected_anomalies={"T5"})
+        # 3. T5: Scan cell with X value on clock during shift (Reference Manual p. 4529)
+        c_t5 = CircuitGraph("t5_circuit")
+        c_t5.add_port("scan_in", "in")
+        c_t5.add_port("scan_out", "out")
+        c_t5.add_gate(Gate("df1", "DFF", inputs={"clk": "floating_clk_net", "d": "scan_in"}, outputs={"Q": "scan_out"}))
+        chains_t5 = [{"name": "chain1", "scan_in": "scan_in", "scan_out": "scan_out", "cells": ["df1"]}]
+        v_t5 = engine.run_all_checks(c_t5, clocks={}, scan_chains=chains_t5)
         self.assertTrue(any(v.rule_id == "T5-1" for v in v_t5))
 
     def test_d1_reference_oracle(self):
         """Test Reference Unit D1 (Reference Manual p. 3863, 3865)."""
+        engine = DRCEngine()
         circuit = CircuitGraph("disturb_circuit")
-        engine = DRCEngine(REF_PDF)
-        v_d1 = engine.run_all_checks(circuit, clocks={"clk": 0}, scan_chains=[], injected_anomalies={"D1"})
+        circuit.add_port("scan_in", "in")
+        circuit.add_port("clk", "in")
+        circuit.add_port("active_rst", "in")
+        circuit.add_port("scan_out", "out")
+        circuit.add_gate(Gate("df1", "DFF", inputs={"clk": "clk", "reset": "active_rst", "d": "scan_in"}, outputs={"Q": "scan_out"}))
+        circuit.set_primary_input("active_rst", 1)
+        chains = [{"name": "chain1", "scan_in": "scan_in", "scan_out": "scan_out", "cells": ["df1"]}]
+
+        v_d1 = engine.run_all_checks(circuit, clocks={"clk": 0}, scan_chains=chains)
         d1_fails = [v for v in v_d1 if "D1" in v.rule_id]
         self.assertEqual(len(d1_fails), 1)
         self.assertEqual(d1_fails[0].rule_id, "D1-1")
-        self.assertIn("disturbed during time 0", d1_fails[0].message)
+        self.assertIn("disturbed", d1_fails[0].message)
 
     def test_atpg_coverage_formulas(self):
         """Test standard IEEE / Tessent coverage calculation formulas."""

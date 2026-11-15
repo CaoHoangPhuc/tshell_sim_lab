@@ -283,8 +283,8 @@ class DRCEngine:
                     set_net = gate.inputs.get("set", gate.inputs.get("S"))
                     set_val = shift_c.nets.get(set_net) if set_net else Logic4.ZERO
 
-                    # T5: Invalid X on clock or active value (1 or X) on set/reset during shift
-                    has_t5 = clk_val == Logic4.X or rst_val in (Logic4.ONE, Logic4.X) or set_val in (Logic4.ONE, Logic4.X)
+                    # T5: Invalid X/Z on clock or active value (1 or X/Z) on set/reset during shift
+                    has_t5 = clk_val in (Logic4.X, Logic4.Z) or rst_val in (Logic4.ONE, Logic4.X, Logic4.Z) or set_val in (Logic4.ONE, Logic4.X, Logic4.Z)
                     if has_t5 or "T5" in anomalies:
                         violations.append(DRCViolation(
                             rule_id="T5-1",
@@ -292,7 +292,7 @@ class DRCEngine:
                             category="Trace",
                             message=f"clock or async input of {gate.name} has invalid value during shift.",
                             offending_gate=gate.name,
-                            offending_pin=clk_net if clk_val == Logic4.X else (rst_net or set_net),
+                            offending_pin=clk_net if clk_val in (Logic4.X, Logic4.Z) else (rst_net or set_net),
                             book_reference="Tessent Shell Reference Manual (p. 4529)",
                         ))
                     elif not _can_clock_be_pulsed_during_shift(shift_c, clk_net, clocks) or "T4" in anomalies:
