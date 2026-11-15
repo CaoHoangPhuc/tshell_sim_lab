@@ -121,10 +121,13 @@ def _setup_shift_conditions(shift_c: CircuitGraph, clocks: dict[str, int]) -> No
         if pi.lower() in scan_en_candidates or pi in scan_en_candidates:
             shift_c.set_primary_input(pi, 1)
 
-    reset_candidates = {"reset", "rst", "rst_n", "reset_n"}
-    for pi in shift_c.primary_inputs:
-        if pi.lower() in reset_candidates:
-            shift_c.set_primary_input(pi, 1 if pi.lower().endswith("_n") else 0)
+    # Parsed reset branches are synchronous and active high regardless of
+    # signal spelling. Preserve manually specified async reset values.
+    for gate in shift_c.gates.values():
+        if gate.gate_type.upper() == "DFF" and gate.reset_kind == "sync":
+            reset = gate.inputs.get("reset")
+            if reset in shift_c.primary_inputs:
+                shift_c.set_primary_input(reset, 0)
 
     for clk_pin, off_val in clocks.items():
         shift_c.set_primary_input(clk_pin, off_val)
@@ -251,8 +254,6 @@ class DRCEngine:
         eval_c = circuit.clone()
         for clk_pin, off_val in clocks.items():
             eval_c.set_primary_input(clk_pin, off_val)
-        if "reset" in eval_c.primary_inputs:
-            eval_c.set_primary_input("reset", 0)
         eval_c.propagate_combinational()
 
         for gate in eval_c.gates.values():
@@ -265,7 +266,7 @@ class DRCEngine:
                 set_val = eval_c.nets.get(set_net) if set_net else Logic4.ZERO
 
                 clock_not_stable = clk_val not in (Logic4.ZERO, Logic4.ONE)
-                async_active = rst_val in (Logic4.ONE, Logic4.X) or set_val in (Logic4.ONE, Logic4.X)
+                async_active = (gate.reset_kind != "sync" and rst_val in (Logic4.ONE, Logic4.X, Logic4.Z)) or set_val in (Logic4.ONE, Logic4.X, Logic4.Z)
 
                 if clock_not_stable or async_active or "C1" in anomalies:
                     violations.append(DRCViolation(

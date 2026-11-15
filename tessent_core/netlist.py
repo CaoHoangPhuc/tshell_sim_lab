@@ -32,6 +32,7 @@ class Gate:
     outputs: dict[str, str] = field(default_factory=dict)  # pin_name -> net_name
     internal_state: Logic4 = Logic4.X  # Verilog registers start unknown until initialized
     fault_forced_value: Logic4 | None = None  # Injected stuck-at fault
+    reset_kind: str = "async"  # Parser explicitly marks synchronous resets
 
     def evaluate_output(self, in_values: dict[str, Logic4]) -> Logic4:
         if self.fault_forced_value is not None:
@@ -119,6 +120,7 @@ class CircuitGraph:
                 outputs=dict(g.outputs),
                 internal_state=g.internal_state,
                 fault_forced_value=g.fault_forced_value,
+                reset_kind=g.reset_kind,
             )
             new_cg.gates[gname] = new_g
         return new_cg
@@ -454,7 +456,7 @@ class _SubsetParser:
                         d_net = mux_net
                     if f'dff_{dest}' in self.graph.gates:
                         self.fail(f'duplicate gate name dff_{dest!s}')
-                    self.graph.add_gate(Gate(f'dff_{dest}', 'DFF', {'clk': clk, 'reset': reset, 'd': d_net}, {'Q': dest}))
+                    self.graph.add_gate(Gate(f'dff_{dest}', 'DFF', {'clk': clk, 'reset': reset, 'd': d_net}, {'Q': dest}, reset_kind='sync'))
                     if shifts is None:
                         self.graph.scan_cells.remove(f'dff_{dest}')
             else:

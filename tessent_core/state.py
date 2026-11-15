@@ -100,7 +100,7 @@ class SessionFSM:
                 "name": "chain1",
                 "scan_in": ctrl["scan_in"],
                 "scan_out": ctrl["scan_out"],
-                "cells": [g.name for g in self.circuit.gates.values() if g.gate_type.upper() == "DFF"],
+                "cells": list(self.circuit.scan_cells),
             }]
 
         return True, (
