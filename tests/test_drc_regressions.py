@@ -111,3 +111,58 @@ def test_t3_does_not_report_violation_for_unrelated_blocked_branch():
     violations = engine.run_all_checks(circuit, clocks={'clk': 0}, scan_chains=chains)
     t3 = [v for v in violations if v.rule_id.startswith('T3')]
     assert len(t3) == 0
+
+
+def test_t4_reports_violation_when_scan_cell_clock_not_pulsed_during_shift():
+    circuit = CircuitGraph('t4_unpulsed_clock')
+    circuit.add_port('scan_in', 'in')
+    circuit.add_port('clk', 'in')
+    circuit.add_port('scan_out', 'out')
+    circuit.add_port('dead_clk', 'in')
+
+    # df1 is connected to dead_clk, which is not in clocks
+    circuit.add_gate(Gate('df1', 'DFF', inputs={'clk': 'dead_clk', 'd': 'scan_in'}, outputs={'Q': 'scan_out'}))
+    circuit.set_primary_input('dead_clk', 0)
+
+    engine = DRCEngine()
+    chains = [{'name': 'chain1', 'scan_in': 'scan_in', 'scan_out': 'scan_out', 'cells': ['df1']}]
+    violations = engine.run_all_checks(circuit, clocks={'clk': 0}, scan_chains=chains)
+    t4 = [v for v in violations if v.rule_id.startswith('T4')]
+    assert len(t4) >= 1
+    assert t4[0].offending_gate == 'df1'
+
+
+def test_t5_reports_violation_when_reset_is_active_during_shift():
+    circuit = CircuitGraph('t5_active_reset')
+    circuit.add_port('scan_in', 'in')
+    circuit.add_port('clk', 'in')
+    circuit.add_port('scan_out', 'out')
+    circuit.add_port('active_rst', 'in')
+
+    circuit.add_gate(Gate('df1', 'DFF', inputs={'clk': 'clk', 'reset': 'active_rst', 'd': 'scan_in'}, outputs={'Q': 'scan_out'}))
+    circuit.set_primary_input('active_rst', 1)
+
+    engine = DRCEngine()
+    chains = [{'name': 'chain1', 'scan_in': 'scan_in', 'scan_out': 'scan_out', 'cells': ['df1']}]
+    violations = engine.run_all_checks(circuit, clocks={'clk': 0}, scan_chains=chains)
+    t5 = [v for v in violations if v.rule_id.startswith('T5')]
+    assert len(t5) >= 1
+    assert t5[0].offending_gate == 'df1'
+
+
+def test_d1_reports_violation_when_reset_disturbs_shift():
+    circuit = CircuitGraph('d1_active_reset')
+    circuit.add_port('scan_in', 'in')
+    circuit.add_port('clk', 'in')
+    circuit.add_port('scan_out', 'out')
+    circuit.add_port('active_rst', 'in')
+
+    circuit.add_gate(Gate('df1', 'DFF', inputs={'clk': 'clk', 'reset': 'active_rst', 'd': 'scan_in'}, outputs={'Q': 'scan_out'}))
+    circuit.set_primary_input('active_rst', 1)
+
+    engine = DRCEngine()
+    chains = [{'name': 'chain1', 'scan_in': 'scan_in', 'scan_out': 'scan_out', 'cells': ['df1']}]
+    violations = engine.run_all_checks(circuit, clocks={'clk': 0}, scan_chains=chains)
+    d1 = [v for v in violations if v.rule_id.startswith('D1')]
+    assert len(d1) >= 1
+    assert d1[0].offending_gate == 'df1'

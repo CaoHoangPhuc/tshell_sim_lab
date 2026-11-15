@@ -99,6 +99,33 @@ def _trace_backward_to_source(
     return False, driver_gate.name
 
 
+def _can_clock_be_pulsed_during_shift(circuit: CircuitGraph, clk_net: str, clocks: dict[str, int]) -> bool:
+    """Check if clk_net transitions when shifting clocks are pulsed."""
+    if not clocks:
+        return False
+    if clk_net in clocks:
+        return True
+    for clk_pin, off_val in clocks.items():
+        pulse_c = circuit.clone()
+        if "scan_en" in pulse_c.primary_inputs:
+            pulse_c.set_primary_input("scan_en", 1)
+        if "reset" in pulse_c.primary_inputs:
+            pulse_c.set_primary_input("reset", 0)
+        for p, ov in clocks.items():
+            pulse_c.set_primary_input(p, ov)
+        pulse_c.propagate_combinational()
+        base_val = pulse_c.nets.get(clk_net, Logic4.X)
+
+        on_val = 1 if off_val == 0 else 0
+        pulse_c.set_primary_input(clk_pin, on_val)
+        pulse_c.propagate_combinational()
+        pulsed_val = pulse_c.nets.get(clk_net, Logic4.X)
+
+        if pulsed_val != base_val and pulsed_val in (Logic4.ZERO, Logic4.ONE):
+            return True
+    return False
+
+
 class DRCEngine:
     """Infers and validates design rules on the circuit graph using pure in-memory knowledge DB."""
 
@@ -245,23 +272,30 @@ class DRCEngine:
             scan_out = chain.get("scan_out", "scan_out")
             cells = chain.get("cells", [])
 
-            # T4 & T5 Checks: Verify clock stability on all cells in the chain during shift
+            # T4 & T5 Checks: Verify clock and set/reset stability and activity during shift
             for cell_name in cells:
                 gate = shift_c.gates.get(cell_name)
                 if gate and gate.gate_type.upper() == "DFF":
                     clk_net = gate.inputs.get("clk", gate.inputs.get("CLK"))
                     clk_val = shift_c.nets.get(clk_net, Logic4.X)
-                    if clk_val == Logic4.X or "T5" in anomalies:
+                    rst_net = gate.inputs.get("reset", gate.inputs.get("R"))
+                    rst_val = shift_c.nets.get(rst_net) if rst_net else Logic4.ZERO
+                    set_net = gate.inputs.get("set", gate.inputs.get("S"))
+                    set_val = shift_c.nets.get(set_net) if set_net else Logic4.ZERO
+
+                    # T5: Invalid X on clock or active value (1 or X) on set/reset during shift
+                    has_t5 = clk_val == Logic4.X or rst_val in (Logic4.ONE, Logic4.X) or set_val in (Logic4.ONE, Logic4.X)
+                    if has_t5 or "T5" in anomalies:
                         violations.append(DRCViolation(
                             rule_id="T5-1",
                             severity=self.handling_overrides.get("T5", "Error"),
                             category="Trace",
-                            message=f"clock input of {gate.name} has X value during shift.",
+                            message=f"clock or async input of {gate.name} has invalid value during shift.",
                             offending_gate=gate.name,
-                            offending_pin=clk_net,
+                            offending_pin=clk_net if clk_val == Logic4.X else (rst_net or set_net),
                             book_reference="Tessent Shell Reference Manual (p. 4529)",
                         ))
-                    elif clk_net not in clocks and "T4" in anomalies:
+                    elif not _can_clock_be_pulsed_during_shift(shift_c, clk_net, clocks) or "T4" in anomalies:
                         violations.append(DRCViolation(
                             rule_id="T4-1",
                             severity=self.handling_overrides.get("T4", "Error"),
