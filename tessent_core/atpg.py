@@ -109,7 +109,7 @@ def execute_test_pattern(
 ) -> tuple[dict[str, Logic4], list[Logic4]]:
     """Execute one scan test pattern: Reset -> Shift-in (Load) -> Capture -> Shift-out (Unload)."""
     ctrl = get_control_pins(circuit)
-    clk = ctrl["clk"] or "clk"
+    clk = ctrl["clk"]
     reset = ctrl["reset"]
     scan_en = ctrl["scan_en"]
     scan_in = ctrl["scan_in"]

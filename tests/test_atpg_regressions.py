@@ -91,3 +91,20 @@ def test_combinational_circuit_with_so_output_is_observed():
     assert engine.faults["so/SA0"].status == FaultClass.DS
     assert engine.faults["so/SA1"].status == FaultClass.DS
     assert stats.fault_coverage == 100.0
+
+
+def test_combinational_circuit_with_clk_input_is_tested_as_data():
+    circuit = CircuitGraph("comb_clk")
+    circuit.add_port("clk", "in")
+    circuit.add_port("y", "out")
+    circuit.add_gate(Gate("assign_y", "ASSIGN", inputs={"in": "clk"}, outputs={"out": "y"}))
+
+    engine = ATPGEngine()
+    engine.populate_stuck_at_faults(circuit)
+    stats = engine.simulate_test_patterns(circuit, [{"clk": 0}, {"clk": 1}])
+
+    assert engine.faults["clk/SA0"].status == FaultClass.DS
+    assert engine.faults["clk/SA1"].status == FaultClass.DS
+    assert engine.faults["y/SA0"].status == FaultClass.DS
+    assert engine.faults["y/SA1"].status == FaultClass.DS
+    assert stats.fault_coverage == 100.0

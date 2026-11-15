@@ -96,7 +96,38 @@ def _trace_backward_to_source(
                     return True, None
         return False, driver_gate.name
 
+    if gt in ("XOR", "XNOR"):
+        for pin, in_net in driver_gate.inputs.items():
+            other_inputs = [other_net for other_pin, other_net in driver_gate.inputs.items() if other_pin != pin]
+            if all(circuit.nets.get(on) in (Logic4.ZERO, Logic4.ONE) for on in other_inputs):
+                reached, b_gate = _trace_backward_to_source(circuit, in_net, target_net, set(visited_gates))
+                if reached:
+                    return True, None
+        return False, driver_gate.name
+
     return False, driver_gate.name
+
+
+def _setup_shift_conditions(shift_c: CircuitGraph, clocks: dict[str, int]) -> None:
+    """Set primary inputs to shift mode: scan enable active, reset inactive, clocks at off-state."""
+    scan_en_candidates = {"scan_en", "se", "scan_enable", "scanenable", "shift_en"}
+    for g in shift_c.gates.values():
+        if g.gate_type.upper() in ("IFMUX", "MUX"):
+            sel_net = g.inputs.get("sel", g.inputs.get("scan_en"))
+            if sel_net and sel_net in shift_c.primary_inputs:
+                scan_en_candidates.add(sel_net)
+
+    for pi in shift_c.primary_inputs:
+        if pi.lower() in scan_en_candidates or pi in scan_en_candidates:
+            shift_c.set_primary_input(pi, 1)
+
+    reset_candidates = {"reset", "rst", "rst_n", "reset_n"}
+    for pi in shift_c.primary_inputs:
+        if pi.lower() in reset_candidates:
+            shift_c.set_primary_input(pi, 1 if pi.lower().endswith("_n") else 0)
+
+    for clk_pin, off_val in clocks.items():
+        shift_c.set_primary_input(clk_pin, off_val)
 
 
 def _can_clock_be_pulsed_during_shift(circuit: CircuitGraph, clk_net: str, clocks: dict[str, int]) -> bool:
@@ -107,12 +138,7 @@ def _can_clock_be_pulsed_during_shift(circuit: CircuitGraph, clk_net: str, clock
         return True
     for clk_pin, off_val in clocks.items():
         pulse_c = circuit.clone()
-        if "scan_en" in pulse_c.primary_inputs:
-            pulse_c.set_primary_input("scan_en", 1)
-        if "reset" in pulse_c.primary_inputs:
-            pulse_c.set_primary_input("reset", 0)
-        for p, ov in clocks.items():
-            pulse_c.set_primary_input(p, ov)
+        _setup_shift_conditions(pulse_c, clocks)
         pulse_c.propagate_combinational()
         base_val = pulse_c.nets.get(clk_net, Logic4.X)
 
@@ -258,12 +284,7 @@ class DRCEngine:
         chains = scan_chains
 
         shift_c = circuit.clone()
-        if "scan_en" in shift_c.primary_inputs:
-            shift_c.set_primary_input("scan_en", 1)
-        if "reset" in shift_c.primary_inputs:
-            shift_c.set_primary_input("reset", 0)
-        for clk_pin, off_val in clocks.items():
-            shift_c.set_primary_input(clk_pin, off_val)
+        _setup_shift_conditions(shift_c, clocks)
         shift_c.propagate_combinational()
 
         for chain in chains:
@@ -308,40 +329,39 @@ class DRCEngine:
 
             # T3 Check: Sensitized Scan Path Tracing
             blocked = False
-            prev_signal = scan_in
+            curr_signal = scan_in
             traced_count = 0
+            remaining_cells = list(cells)
 
-            for cell_name in cells:
-                target_gate = shift_c.gates.get(cell_name)
-                if not target_gate:
-                    blocked = True
-                    violations.append(DRCViolation(
-                        rule_id="T3-1",
-                        severity=self.handling_overrides.get("T3", "Error"),
-                        category="Trace",
-                        message=f"Scan chain {chain_name} blocked at gate {cell_name} after tracing {traced_count} cells.",
-                        offending_gate=cell_name,
-                        book_reference="Tessent Shell Reference Manual (p. 4522)",
-                    ))
-                    break
+            while remaining_cells and not blocked:
+                # Find which cell in remaining_cells has its scan input connected to curr_signal
+                next_cell = None
+                for c_name in remaining_cells:
+                    g = shift_c.gates.get(c_name)
+                    if not g:
+                        continue
+                    d_net = g.inputs.get("d", g.inputs.get("D", g.inputs.get("scan_in", g.inputs.get("si"))))
+                    if not d_net:
+                        continue
+                    reached, _ = _trace_backward_to_source(shift_c, d_net, curr_signal)
+                    if reached:
+                        next_cell = g
+                        break
 
-                d_net = target_gate.inputs.get("d", target_gate.inputs.get("D", target_gate.inputs.get("scan_in", target_gate.inputs.get("si"))))
-                if not d_net:
+                if not next_cell:
                     blocked = True
-                    violations.append(DRCViolation(
-                        rule_id="T3-1",
-                        severity=self.handling_overrides.get("T3", "Error"),
-                        category="Trace",
-                        message=f"Scan chain {chain_name} blocked at gate {cell_name} after tracing {traced_count} cells.",
-                        offending_gate=cell_name,
-                        book_reference="Tessent Shell Reference Manual (p. 4522)",
-                    ))
-                    break
+                    offending = curr_signal
+                    target_g = shift_c.gates.get(remaining_cells[0])
+                    if target_g:
+                        d_net = target_g.inputs.get("d", target_g.inputs.get("D", target_g.inputs.get("scan_in", target_g.inputs.get("si"))))
+                        if d_net:
+                            _, b_gate = _trace_backward_to_source(shift_c, d_net, curr_signal)
+                            offending = b_gate or target_g.name
+                        else:
+                            offending = target_g.name
+                    else:
+                        offending = remaining_cells[0]
 
-                reached, b_gate = _trace_backward_to_source(shift_c, d_net, prev_signal)
-                if not reached:
-                    blocked = True
-                    offending = b_gate or target_gate.name
                     violations.append(DRCViolation(
                         rule_id="T3-1",
                         severity=self.handling_overrides.get("T3", "Error"),
@@ -352,12 +372,14 @@ class DRCEngine:
                     ))
                     break
 
+                remaining_cells.remove(next_cell.name)
                 traced_count += 1
-                prev_signal = target_gate.outputs.get("Q", target_gate.outputs.get("q", list(target_gate.outputs.values())[0] if target_gate.outputs else None))
+                curr_signal = next_cell.outputs.get("Q", next_cell.outputs.get("q", list(next_cell.outputs.values())[0] if next_cell.outputs else None))
 
-            # If cells were all traced, verify connection from last cell to scan_out
-            if not blocked and cells and scan_out:
-                reached, b_gate = _trace_backward_to_source(shift_c, scan_out, prev_signal)
+            # If all cells were traced, verify connection from last cell to scan_out
+            if not blocked and scan_out:
+                expected_src = curr_signal if cells else scan_in
+                reached, b_gate = _trace_backward_to_source(shift_c, scan_out, expected_src)
                 if not reached:
                     blocked = True
                     offending = b_gate or scan_out
@@ -366,19 +388,6 @@ class DRCEngine:
                         severity=self.handling_overrides.get("T3", "Error"),
                         category="Trace",
                         message=f"Scan chain {chain_name} blocked at gate {offending} after tracing {traced_count} cells.",
-                        offending_gate=offending,
-                        book_reference="Tessent Shell Reference Manual (p. 4522)",
-                    ))
-            elif not blocked and not cells and scan_out:
-                reached, b_gate = _trace_backward_to_source(shift_c, scan_out, scan_in)
-                if not reached:
-                    blocked = True
-                    offending = b_gate or scan_out
-                    violations.append(DRCViolation(
-                        rule_id="T3-1",
-                        severity=self.handling_overrides.get("T3", "Error"),
-                        category="Trace",
-                        message=f"Scan chain {chain_name} blocked at gate {offending} after tracing 0 cells.",
                         offending_gate=offending,
                         book_reference="Tessent Shell Reference Manual (p. 4522)",
                     ))

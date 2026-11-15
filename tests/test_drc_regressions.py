@@ -166,3 +166,77 @@ def test_d1_reports_violation_when_reset_disturbs_shift():
     d1 = [v for v in violations if v.rule_id.startswith('D1')]
     assert len(d1) >= 1
     assert d1[0].offending_gate == 'df1'
+
+
+def test_t3_passes_when_scan_enable_is_named_se():
+    circuit = CircuitGraph('test_se')
+    circuit.add_port('clk', 'in')
+    circuit.add_port('se', 'in')
+    circuit.add_port('scan_in', 'in')
+    circuit.add_port('scan_out', 'out')
+
+    # Scan mux: sel=se, d0=d_func, d1=scan_in -> d_mux
+    circuit.add_gate(Gate('mux1', 'IFMUX', inputs={'sel': 'se', 'd0': 'd_func', 'd1': 'scan_in'}, outputs={'out': 'd_mux'}))
+    circuit.add_gate(Gate('df1', 'DFF', inputs={'clk': 'clk', 'd': 'd_mux'}, outputs={'Q': 'scan_out'}))
+
+    engine = DRCEngine()
+    chains = [{'name': 'chain1', 'scan_in': 'scan_in', 'scan_out': 'scan_out', 'cells': ['df1']}]
+    violations = engine.run_all_checks(circuit, clocks={'clk': 0}, scan_chains=chains)
+    t3 = [v for v in violations if v.rule_id.startswith('T3')]
+    assert len(t3) == 0
+
+
+def test_t3_passes_when_cells_list_in_chain_is_arbitrarily_ordered():
+    circuit = CircuitGraph('out_of_order_cells')
+    circuit.add_port('clk', 'in')
+    circuit.add_port('scan_in', 'in')
+    circuit.add_port('scan_out', 'out')
+
+    # True scan path: scan_in -> df0 -> df1 -> scan_out
+    circuit.add_gate(Gate('df1', 'DFF', inputs={'clk': 'clk', 'd': 'q0'}, outputs={'Q': 'scan_out'}))
+    circuit.add_gate(Gate('df0', 'DFF', inputs={'clk': 'clk', 'd': 'scan_in'}, outputs={'Q': 'q0'}))
+
+    engine = DRCEngine()
+    # Cells list is [df1, df0] (declaration order where df1 is listed first)
+    chains = [{'name': 'chain1', 'scan_in': 'scan_in', 'scan_out': 'scan_out', 'cells': ['df1', 'df0']}]
+    violations = engine.run_all_checks(circuit, clocks={'clk': 0}, scan_chains=chains)
+    t3 = [v for v in violations if v.rule_id.startswith('T3')]
+    assert len(t3) == 0
+
+
+def test_t3_passes_when_scan_path_has_sensitized_xor():
+    circuit = CircuitGraph('test_xor')
+    circuit.add_port('clk', 'in')
+    circuit.add_port('scan_in', 'in')
+    circuit.add_port('scan_out', 'out')
+    circuit.add_port('const1', 'in')
+
+    # XOR with const1 = 1 (inversion): sensitized
+    circuit.add_gate(Gate('g_xor', 'XOR', inputs={'in0': 'scan_in', 'in1': 'const1'}, outputs={'out': 'd_xor'}))
+    circuit.add_gate(Gate('df1', 'DFF', inputs={'clk': 'clk', 'd': 'd_xor'}, outputs={'Q': 'scan_out'}))
+    circuit.set_primary_input('const1', 1)
+
+    engine = DRCEngine()
+    chains = [{'name': 'chain1', 'scan_in': 'scan_in', 'scan_out': 'scan_out', 'cells': ['df1']}]
+    violations = engine.run_all_checks(circuit, clocks={'clk': 0}, scan_chains=chains)
+    t3 = [v for v in violations if v.rule_id.startswith('T3')]
+    assert len(t3) == 0
+
+
+def test_t3_fails_when_scan_path_xor_is_unsensitized():
+    circuit = CircuitGraph('test_xor_x')
+    circuit.add_port('clk', 'in')
+    circuit.add_port('scan_in', 'in')
+    circuit.add_port('scan_out', 'out')
+    circuit.add_port('floating_ctrl', 'in')
+
+    # XOR with floating_ctrl = X: unsensitized
+    circuit.add_gate(Gate('g_xor', 'XOR', inputs={'in0': 'scan_in', 'in1': 'floating_ctrl'}, outputs={'out': 'd_xor'}))
+    circuit.add_gate(Gate('df1', 'DFF', inputs={'clk': 'clk', 'd': 'd_xor'}, outputs={'Q': 'scan_out'}))
+
+    engine = DRCEngine()
+    chains = [{'name': 'chain1', 'scan_in': 'scan_in', 'scan_out': 'scan_out', 'cells': ['df1']}]
+    violations = engine.run_all_checks(circuit, clocks={'clk': 0}, scan_chains=chains)
+    t3 = [v for v in violations if v.rule_id.startswith('T3')]
+    assert len(t3) >= 1
+    assert t3[0].offending_gate == 'g_xor'
