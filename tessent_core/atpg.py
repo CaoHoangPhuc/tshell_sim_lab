@@ -56,6 +56,17 @@ def find_pin(candidates: tuple[str, ...], available: set[str] | list[str]) -> st
 
 
 def get_control_pins(circuit: CircuitGraph) -> dict[str, str | None]:
+    has_flops = any(g.gate_type.upper() == "DFF" for g in circuit.gates.values())
+    if not has_flops and not circuit.scan_cells:
+        # Purely combinational circuit: no scan control pins
+        return {
+            "clk": None,
+            "reset": None,
+            "scan_en": None,
+            "scan_in": None,
+            "scan_out": None,
+        }
+
     clk_pin = None
     reset_pin = None
     scan_en_pin = None
@@ -98,7 +109,7 @@ def execute_test_pattern(
 ) -> tuple[dict[str, Logic4], list[Logic4]]:
     """Execute one scan test pattern: Reset -> Shift-in (Load) -> Capture -> Shift-out (Unload)."""
     ctrl = get_control_pins(circuit)
-    clk = ctrl["clk"] or "clk"
+    clk = ctrl["clk"]
     reset = ctrl["reset"]
     scan_en = ctrl["scan_en"]
     scan_in = ctrl["scan_in"]
@@ -130,21 +141,25 @@ def execute_test_pattern(
 
     circuit.propagate_combinational()
 
+    scan_len = len(circuit.scan_cells) if circuit.scan_cells else len(shift_bits)
+    is_scan = scan_len > 0 and bool(scan_out and scan_en and scan_out in circuit.primary_outputs and scan_en in circuit.primary_inputs)
+
     # Strobe Primary Outputs before capture clock (observes combinational PI->PO paths)
     obs_pos: dict[str, Logic4] = {}
     for po in circuit.primary_outputs:
-        if po != scan_out:
+        if not is_scan or po != scan_out:
             pre_val = circuit.nets.get(po, Logic4.X)
             obs_pos[f"{po}@pre"] = pre_val
             obs_pos[po] = pre_val
 
     # Capture pulse
-    circuit.clock_edge(clk)
-    circuit.propagate_combinational()
+    if clk and (clk in circuit.primary_inputs or any(g.gate_type.upper() == "DFF" for g in circuit.gates.values())):
+        circuit.clock_edge(clk)
+        circuit.propagate_combinational()
 
     # Strobe Primary Outputs after capture clock (observes sequential / flop-captured values on POs)
     for po in circuit.primary_outputs:
-        if po != scan_out:
+        if not is_scan or po != scan_out:
             post_val = circuit.nets.get(po, Logic4.X)
             obs_pos[f"{po}@post"] = post_val
             obs_pos[po] = post_val
