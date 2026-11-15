@@ -46,6 +46,8 @@ class Gate:
         if gt == "BUF":
             in_val = list(in_values.values())[0] if in_values else Logic4.X
             return buf4(in_val)
+        if gt in ("ASSIGN", "WIRE"):
+            return list(in_values.values())[0] if in_values else Logic4.X
         if gt == "AND":
             vals = list(in_values.values())
             res = vals[0] if vals else Logic4.X
@@ -408,7 +410,7 @@ class _SubsetParser:
                 self.drive(dest)
                 if dest in self.regs:
                     self.fail('continuous assignment to a register is unsupported')
-                self.graph.add_gate(Gate(self.temp('assign'), 'BUF', {'in': self.expr_net(expr)}, {'out': dest}))
+                self.graph.add_gate(Gate(self.temp('assign'), 'ASSIGN', {'in': self.expr_net(expr)}, {'out': dest}))
             elif self.peek() in self._primitives:
                 kind = self.peek(); self.i += 1
                 name = self.name(); self.take('('); pins = self.names(); self.take(')'); self.take(';')

@@ -89,6 +89,19 @@ class NetlistRegressionTests(unittest.TestCase):
         self.assertEqual(graph.nets['undriven_out'], Logic4.Z)
         self.assertEqual(graph.nets['y'], Logic4.X)
 
+    def test_continuous_assign_propagates_z_whereas_buf_gate_produces_x(self):
+        graph = parse_verilog_netlist('''module test_assign_z(a, y_assign, y_buf);
+            input a;
+            output y_assign, y_buf;
+            assign y_assign = a;
+            buf b1(y_buf, a);
+        endmodule''')
+        graph.set_primary_input('a', Logic4.Z)
+        graph.propagate_combinational()
+        self.assertEqual(graph.nets['a'], Logic4.Z)
+        self.assertEqual(graph.nets['y_assign'], Logic4.Z)
+        self.assertEqual(graph.nets['y_buf'], Logic4.X)
+
     @unittest.skipUnless(shutil.which('iverilog') and shutil.which('vvp'), 'Icarus not available')
     def test_generated_design_simulation_matches_icarus(self):
         rtl = insert_scan(EXAMPLE)[0]
