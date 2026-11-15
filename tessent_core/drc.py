@@ -132,7 +132,15 @@ class DRCEngine:
             if gate.gate_type.upper() == "DFF":
                 clk_net = gate.inputs.get("clk", gate.inputs.get("CLK", "clk"))
                 clk_val = eval_c.nets.get(clk_net, Logic4.X)
-                if clk_val != Logic4.ZERO or "C1" in anomalies:
+                rst_net = gate.inputs.get("reset", gate.inputs.get("R"))
+                rst_val = eval_c.nets.get(rst_net) if rst_net else Logic4.ZERO
+                set_net = gate.inputs.get("set", gate.inputs.get("S"))
+                set_val = eval_c.nets.get(set_net) if set_net else Logic4.ZERO
+
+                clock_not_stable = clk_val not in (Logic4.ZERO, Logic4.ONE)
+                async_active = rst_val in (Logic4.ONE, Logic4.X) or set_val in (Logic4.ONE, Logic4.X)
+
+                if clock_not_stable or async_active or "C1" in anomalies:
                     violations.append(DRCViolation(
                         rule_id="C1-1",
                         severity=self.handling_overrides.get("C1", "Error"),
