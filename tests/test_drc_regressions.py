@@ -53,3 +53,61 @@ def test_c1_fails_when_clock_is_unknown_x():
     # When clk off-state is 1, 1 AND X is X -> triggers C1!
     violations = engine.run_all_checks(circuit, clocks={'clk': 1}, scan_chains=[])
     assert any(v.rule_id.startswith('C1') for v in violations)
+
+
+def test_t3_reports_violation_when_scan_in_not_connected_to_first_cell():
+    circuit = CircuitGraph('broken_scan_in')
+    circuit.add_port('scan_in', 'in')
+    circuit.add_port('clk', 'in')
+    circuit.add_port('other_in', 'in')
+    circuit.add_port('scan_out', 'out')
+
+    circuit.add_gate(Gate('df1', 'DFF', inputs={'clk': 'clk', 'd': 'other_in'}, outputs={'Q': 'q1'}))
+    circuit.add_gate(Gate('df2', 'DFF', inputs={'clk': 'clk', 'd': 'q1'}, outputs={'Q': 'scan_out'}))
+
+    engine = DRCEngine()
+    chains = [{'name': 'chain1', 'scan_in': 'scan_in', 'scan_out': 'scan_out', 'cells': ['df1', 'df2']}]
+    violations = engine.run_all_checks(circuit, clocks={'clk': 0}, scan_chains=chains)
+    t3 = [v for v in violations if v.rule_id.startswith('T3')]
+    assert len(t3) >= 1
+    assert 'blocked' in t3[0].message.lower()
+
+
+def test_t3_reports_violation_when_last_cell_not_connected_to_scan_out():
+    circuit = CircuitGraph('broken_scan_out')
+    circuit.add_port('scan_in', 'in')
+    circuit.add_port('clk', 'in')
+    circuit.add_port('scan_out', 'out')
+
+    circuit.add_gate(Gate('df1', 'DFF', inputs={'clk': 'clk', 'd': 'scan_in'}, outputs={'Q': 'q1'}))
+    circuit.add_gate(Gate('df2', 'DFF', inputs={'clk': 'clk', 'd': 'q1'}, outputs={'Q': 'other_out'}))
+
+    engine = DRCEngine()
+    chains = [{'name': 'chain1', 'scan_in': 'scan_in', 'scan_out': 'scan_out', 'cells': ['df1', 'df2']}]
+    violations = engine.run_all_checks(circuit, clocks={'clk': 0}, scan_chains=chains)
+    t3 = [v for v in violations if v.rule_id.startswith('T3')]
+    assert len(t3) >= 1
+    assert 'blocked' in t3[0].message.lower()
+
+
+def test_t3_does_not_report_violation_for_unrelated_blocked_branch():
+    circuit = CircuitGraph('unrelated_branch')
+    circuit.add_port('scan_in', 'in')
+    circuit.add_port('clk', 'in')
+    circuit.add_port('scan_out', 'out')
+    circuit.add_port('zero_net', 'in')
+    circuit.add_port('unrelated_out', 'out')
+
+    # Sensitized scan path: scan_in -> df1 -> df2 -> scan_out
+    circuit.add_gate(Gate('df1', 'DFF', inputs={'clk': 'clk', 'd': 'scan_in'}, outputs={'Q': 'q1'}))
+    circuit.add_gate(Gate('df2', 'DFF', inputs={'clk': 'clk', 'd': 'q1'}, outputs={'Q': 'scan_out'}))
+
+    # Unrelated AND gate with controlling 0
+    circuit.add_gate(Gate('g_unrelated', 'AND', inputs={'in0': 'scan_in', 'in1': 'zero_net'}, outputs={'out': 'unrelated_out'}))
+    circuit.set_primary_input('zero_net', 0)
+
+    engine = DRCEngine()
+    chains = [{'name': 'chain1', 'scan_in': 'scan_in', 'scan_out': 'scan_out', 'cells': ['df1', 'df2']}]
+    violations = engine.run_all_checks(circuit, clocks={'clk': 0}, scan_chains=chains)
+    t3 = [v for v in violations if v.rule_id.startswith('T3')]
+    assert len(t3) == 0
